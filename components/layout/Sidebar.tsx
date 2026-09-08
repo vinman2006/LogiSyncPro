@@ -52,6 +52,21 @@ export const NAV_SECTIONS: NavSection[] = [
     title: 'Operations',
     items: [
       {
+        label: 'Consignments & Shipments',
+        href: '/shipments',
+        icon: PackageCheck,
+      },
+      {
+        label: 'Find Collectors',
+        href: '/network/collectors',
+        icon: Share2,
+      },
+      {
+        label: 'Node Network',
+        href: '/supply-chain',
+        icon: Share2,
+      },
+      {
         label: 'Fleet Management',
         href: '/fleet',
         icon: Truck,
@@ -70,11 +85,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Delivery Tracker',
         href: '/delivery',
         icon: PackageCheck,
-      },
-      {
-        label: 'Supply Chain',
-        href: '/supply-chain',
-        icon: Share2,
       },
     ],
   },

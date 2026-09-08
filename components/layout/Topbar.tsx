@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLogistics } from '@/lib/context/LogisticsContext';
+import { useNetwork } from '@/lib/context/NetworkContext';
 import { MOCK_DATA_HUBS } from '@/lib/mock-data/dashboard';
 import { UserRole } from '@/lib/mock-data/types';
+import { Truck, Package, Sprout, Sparkles } from 'lucide-react';
 
 interface TopbarProps {
   onOpenMobileMenu: () => void;
@@ -42,6 +44,14 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
     markAlertAsRead,
     setSearchOpen,
   } = useLogistics();
+
+  const {
+    currentNode,
+    switchDemoRole,
+    notifications,
+    unreadCount,
+    markAllNotificationsRead,
+  } = useNetwork();
 
   const [hubDropdownOpen, setHubDropdownOpen] = useState(false);
   const [alertDropdownOpen, setAlertDropdownOpen] = useState(false);
@@ -84,8 +94,51 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
         </button>
       </div>
 
-      {/* Right Section: Hub Switcher + Alert Bell + User Menu */}
+      {/* Right Section: Node Switcher + Hub Switcher + Alert Bell + User Menu */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Logistics Node Role Quick Switcher Pills (Requirement 39 & 48) */}
+        <div className="hidden xl:flex items-center gap-1 p-1 rounded-xl bg-neutral-100 border border-neutral-200 text-xs">
+          <button
+            type="button"
+            onClick={() => switchDemoRole('DISTRIBUTOR')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition-all ${
+              currentNode?.role === 'DISTRIBUTOR'
+                ? 'bg-brand text-brand-foreground shadow-xs'
+                : 'text-neutral-600 hover:text-neutral-900'
+            }`}
+            title="Switch Node View to Pune Fresh Logistics"
+          >
+            <Truck className="h-3.5 w-3.5" />
+            <span>Distributor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => switchDemoRole('COLLECTOR')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition-all ${
+              currentNode?.role === 'COLLECTOR'
+                ? 'bg-brand text-brand-foreground shadow-xs'
+                : 'text-neutral-600 hover:text-neutral-900'
+            }`}
+            title="Switch Node View to Pune City Produce Collector"
+          >
+            <Package className="h-3.5 w-3.5" />
+            <span>Collector</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => switchDemoRole('FARMER')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition-all ${
+              currentNode?.role === 'FARMER'
+                ? 'bg-brand text-brand-foreground shadow-xs'
+                : 'text-neutral-600 hover:text-neutral-900'
+            }`}
+            title="Switch Node View to Maharashtra Orange Farm"
+          >
+            <Sprout className="h-3.5 w-3.5" />
+            <span>Farmer</span>
+          </button>
+        </div>
+
         {/* Logistics Hub Switcher Dropdown */}
         <div className="relative">
           <button
@@ -100,9 +153,9 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
           >
             <Building2 className="w-3.5 h-3.5 text-neutral-500" />
             <span className="hidden md:inline max-w-[130px] truncate">
-              {selectedHub.name}
+              {currentNode?.name || selectedHub.name}
             </span>
-            <span className="md:hidden text-xs">{selectedHub.code}</span>
+            <span className="md:hidden text-xs">{currentNode?.role?.slice(0, 4) || selectedHub.code}</span>
             <ChevronDown className="w-3 h-3 text-neutral-400" />
           </button>
 
@@ -139,7 +192,7 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
           )}
         </div>
 
-        {/* Alerts Bell Dropdown */}
+        {/* Alerts & Multi-User Notifications Bell Dropdown */}
         <div className="relative">
           <button
             type="button"
@@ -149,12 +202,12 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
               setUserMenuOpen(false);
             }}
             className="relative p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
-            aria-label={`View alerts (${unreadAlertsCount} unread)`}
+            aria-label={`View alerts (${unreadAlertsCount + unreadCount} unread)`}
           >
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-            {unreadAlertsCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-critical-600 text-white text-[10px] font-bold flex items-center justify-center tabular-nums shadow-xs animate-pulse">
-                {unreadAlertsCount}
+            {unreadAlertsCount + unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center tabular-nums shadow-xs animate-pulse">
+                {unreadAlertsCount + unreadCount}
               </span>
             )}
           </button>
@@ -166,18 +219,47 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
             >
               <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-100">
                 <span className="text-xs font-semibold text-neutral-900">
-                  Operational Alerts ({unreadAlertsCount} unread)
+                  Live Network Events ({unreadCount + unreadAlertsCount} unread)
                 </span>
-                <Link
-                  href="/alerts"
-                  className="text-xs text-brand-600 hover:underline font-medium"
-                  onClick={() => setAlertDropdownOpen(false)}
+                <button
+                  type="button"
+                  onClick={() => markAllNotificationsRead()}
+                  className="text-xs text-brand hover:underline font-medium"
                 >
-                  View full feed
-                </Link>
+                  Mark all read
+                </button>
               </div>
 
-              <div className="divide-y divide-neutral-100 max-h-72 overflow-y-auto py-1">
+              {/* Multi-User Realtime Network Events */}
+              {notifications.length > 0 && (
+                <div className="divide-y divide-neutral-100 border-b border-neutral-100 py-1">
+                  <div className="px-3 py-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                    Recent Multi-Node Updates
+                  </div>
+                  {notifications.slice(0, 4).map((notif) => (
+                    <div
+                      key={notif.id}
+                      className="px-3 py-2 hover:bg-brand/5 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-semibold text-neutral-900">
+                          {notif.title}
+                        </span>
+                        {!notif.read && (
+                          <span className="text-[9px] font-bold bg-brand text-white px-1.5 py-0.2 rounded-full">
+                            NEW
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-neutral-600 mt-0.5 leading-snug">
+                        {notif.message}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="divide-y divide-neutral-100 max-h-56 overflow-y-auto py-1">
                 {alerts.length === 0 ? (
                   <div className="py-6 text-center text-xs text-neutral-400">
                     No active alerts

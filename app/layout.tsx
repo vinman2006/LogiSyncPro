@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/context/AuthContext";
+import { NetworkProvider } from "@/lib/context/NetworkContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -42,7 +43,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${manrope.variable} ${jetbrainsMono.variable}`}>
       <body className="bg-primary text-neutral-900 font-sans min-h-screen antialiased selection:bg-brand-50 selection:text-brand-600">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <NetworkProvider>{children}</NetworkProvider>
+        </AuthProvider>
       </body>
     </html>
   );

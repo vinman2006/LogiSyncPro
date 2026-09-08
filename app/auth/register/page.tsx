@@ -76,7 +76,7 @@ export default function RegisterPage() {
     setError('');
     try {
       await registerWithEmail(email, password, displayName);
-      router.replace('/');
+      router.replace('/onboarding');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed';
       const cleaned = message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim();
