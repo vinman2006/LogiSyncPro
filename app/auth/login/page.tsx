@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import gsap from 'gsap';
 import {
-  Truck,
   Mail,
   Lock,
   Eye,

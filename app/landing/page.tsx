@@ -5,12 +5,11 @@ import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SparklesCore } from '@/components/ui/sparkles';
-import { Logo, LogoIcon } from '@/components/ui/Logo';
+import { Logo } from '@/components/ui/Logo';
 import {
   Truck,
   MapPin,
   BarChart3,
-  Zap,
   ShieldCheck,
   ArrowRight,
   Star,
@@ -23,7 +22,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Globe,
-  Sparkles,
 } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
