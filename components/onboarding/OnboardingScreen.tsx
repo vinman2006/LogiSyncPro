@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Country, State, ICountry, IState } from 'country-state-city';
 import {
@@ -19,7 +19,7 @@ import { useNetwork } from '@/lib/context/NetworkContext';
 import { resolveUserName } from '@/lib/utils/userName';
 
 export function OnboardingScreen() {
-  const router = useRouter(); 
+  const router = useRouter();
   const { user, refreshProfile } = useAuth();
   const { setCurrentNode, refreshShipments } = useNetwork();
 
@@ -31,12 +31,17 @@ export function OnboardingScreen() {
   // Countries dataset
   const allCountries = useMemo(() => Country.getAllCountries(), []);
 
-  // Form states
+  // Form states - Default to India (IN)
   const [selectedCountry, setSelectedCountry] = useState<ICountry>(() => {
-    return allCountries.find((c) => c.isoCode === 'IN') || allCountries[0];
+    const india = allCountries.find((c) => c.isoCode === 'IN');
+    return india || allCountries[0];
   });
   const [countrySearch, setCountrySearch] = useState('');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+
+  // Dropdown refs for click-outside closing
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+  const regionDropdownRef = useRef<HTMLDivElement>(null);
 
   // States/Regions dataset dynamically loaded for selected country
   const regionsForCountry = useMemo(() => {
@@ -46,6 +51,21 @@ export function OnboardingScreen() {
   const [selectedRegion, setSelectedRegion] = useState<IState | null>(null);
   const [regionSearch, setRegionSearch] = useState('');
   const [isRegionDropdownOpen, setIsRegionDropdownOpen] = useState(false);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(target)) {
+        setIsCountryDropdownOpen(false);
+      }
+      if (regionDropdownRef.current && !regionDropdownRef.current.contains(target)) {
+        setIsRegionDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Default region to Maharashtra if India, or first state in list
   useEffect(() => {
@@ -70,9 +90,13 @@ export function OnboardingScreen() {
   const [error, setError] = useState('');
   const [createdNode, setCreatedNode] = useState<any>(null);
 
-  // Filtered countries based on search input
+  // Filtered countries based on search input (India pinned first when not searching)
   const filteredCountries = useMemo(() => {
-    if (!countrySearch.trim()) return allCountries;
+    if (!countrySearch.trim()) {
+      const india = allCountries.find((c) => c.isoCode === 'IN');
+      const others = allCountries.filter((c) => c.isoCode !== 'IN');
+      return india ? [india, ...others] : allCountries;
+    }
     const q = countrySearch.toLowerCase();
     return allCountries.filter(
       (c) => c.name.toLowerCase().includes(q) || c.isoCode.toLowerCase().includes(q)
@@ -174,67 +198,70 @@ export function OnboardingScreen() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-8 px-4 animate-in fade-in duration-300">
-      {/* Top Header branding (Requirement 2) */}
+    <div className="w-full max-w-2xl mx-auto py-6 sm:py-8 px-4 animate-in fade-in duration-300">
+      {/* Top Header branding */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold mb-3 border border-brand/20">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-50 text-brand-600 text-xs font-bold mb-3 border border-brand-500/20">
           <Sparkles className="w-3.5 h-3.5" />
           <span>One System. Every Move.</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
-          Welcome to LogiSync, <span className="text-brand">{resolvedName}</span>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-900 tracking-tight">
+          Welcome to LogiSync, <span className="text-brand-600">{resolvedName}</span>
         </h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-2">
+        <p className="text-sm sm:text-base text-neutral-600 mt-2">
           Let&apos;s set up your logistics network and node profile.
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 rounded-2xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0" />
+        <div className="mb-6 rounded-2xl bg-red-50 border border-red-200 p-4 text-sm text-red-700 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
           <span>{error}</span>
         </div>
       )}
 
       {/* STEP 1: Country, Region, Role, Business Name */}
       {step === 1 && (
-        <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl">
+        <div className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-xl">
           <form onSubmit={handleSaveProfile} className="space-y-6">
-            {/* 1. Country Selection (Requirement 3: Searchable dropdown containing ALL countries) */}
+            {/* 1. Country Selection */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">
                 1. Choose your country
               </label>
-              <div className="relative">
+              <div className="relative" ref={countryDropdownRef}>
                 <button
                   type="button"
-                  onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                  className="w-full flex items-center justify-between p-3.5 rounded-xl border border-border bg-background text-left text-sm font-semibold text-foreground hover:border-brand/40 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
+                  onClick={() => {
+                    setIsCountryDropdownOpen((prev) => !prev);
+                    setIsRegionDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-300 bg-white text-left text-sm font-semibold text-neutral-900 hover:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
                 >
                   <div className="flex items-center gap-2.5">
                     <span className="text-xl">{selectedCountry.flag}</span>
                     <span>{selectedCountry.name}</span>
-                    <span className="text-xs text-muted-foreground font-mono">({selectedCountry.isoCode})</span>
+                    <span className="text-xs text-neutral-500 font-mono">({selectedCountry.isoCode})</span>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <ChevronDown className="w-4 h-4 text-neutral-400" />
                 </button>
 
                 {isCountryDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border border-border bg-card shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                    <div className="p-2.5 border-b border-border bg-muted/20">
+                  <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border border-neutral-200 bg-white shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="p-2.5 border-b border-neutral-200 bg-neutral-50">
                       <div className="relative">
-                        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5 pointer-events-none" />
+                        <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5 pointer-events-none" />
                         <input
                           type="text"
                           value={countrySearch}
                           onChange={(e) => setCountrySearch(e.target.value)}
-                          placeholder="🔍 Search countries..."
+                          placeholder="Search countries..."
                           autoFocus
-                          className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                          className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
                         />
                       </div>
                     </div>
-                    <div className="max-h-60 overflow-y-auto divide-y divide-border/40 p-1">
+                    <div className="max-h-60 overflow-y-auto divide-y divide-neutral-100 p-1 bg-white">
                       {filteredCountries.slice(0, 80).map((c) => (
                         <button
                           key={c.isoCode}
@@ -246,15 +273,15 @@ export function OnboardingScreen() {
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs rounded-lg transition-colors ${
                             selectedCountry.isoCode === c.isoCode
-                              ? 'bg-brand/10 text-brand font-bold'
-                              : 'hover:bg-muted text-foreground'
+                              ? 'bg-brand-50 text-brand-600 font-bold'
+                              : 'hover:bg-neutral-100 text-neutral-800'
                           }`}
                         >
                           <div className="flex items-center gap-2">
                             <span>{c.flag}</span>
                             <span>{c.name}</span>
                           </div>
-                          <span className="text-[10px] text-muted-foreground font-mono">{c.isoCode}</span>
+                          <span className="text-[10px] text-neutral-400 font-mono">{c.isoCode}</span>
                         </button>
                       ))}
                     </div>
@@ -263,46 +290,49 @@ export function OnboardingScreen() {
               </div>
             </div>
 
-            {/* 2. Region Selection (Requirement 4: Dynamically loaded based on Country) */}
+            {/* 2. Region Selection */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">
                 2. Choose your region / state in {selectedCountry.name}
               </label>
               {regionsForCountry.length > 0 ? (
-                <div className="relative">
+                <div className="relative" ref={regionDropdownRef}>
                   <button
                     type="button"
-                    onClick={() => setIsRegionDropdownOpen(!isRegionDropdownOpen)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-border bg-background text-left text-sm font-semibold text-foreground hover:border-brand/40 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
+                    onClick={() => {
+                      setIsRegionDropdownOpen((prev) => !prev);
+                      setIsCountryDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-300 bg-white text-left text-sm font-semibold text-neutral-900 hover:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
                   >
                     <div className="flex items-center gap-2.5">
-                      <MapPin className="w-4 h-4 text-brand" />
+                      <MapPin className="w-4 h-4 text-brand-500" />
                       <span>{selectedRegion?.name || 'Select Region'}</span>
                       {selectedRegion?.isoCode && (
-                        <span className="text-xs text-muted-foreground font-mono">
+                        <span className="text-xs text-neutral-500 font-mono">
                           ({selectedRegion.isoCode})
                         </span>
                       )}
                     </div>
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    <ChevronDown className="w-4 h-4 text-neutral-400" />
                   </button>
 
                   {isRegionDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border border-border bg-card shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                      <div className="p-2.5 border-b border-border bg-muted/20">
+                    <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border border-neutral-200 bg-white shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                      <div className="p-2.5 border-b border-neutral-200 bg-neutral-50">
                         <div className="relative">
-                          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5 pointer-events-none" />
+                          <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5 pointer-events-none" />
                           <input
                             type="text"
                             value={regionSearch}
                             onChange={(e) => setRegionSearch(e.target.value)}
-                            placeholder="🔍 Search regions / states..."
+                            placeholder="Search regions / states..."
                             autoFocus
-                            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
                           />
                         </div>
                       </div>
-                      <div className="max-h-60 overflow-y-auto divide-y divide-border/40 p-1">
+                      <div className="max-h-60 overflow-y-auto divide-y divide-neutral-100 p-1 bg-white">
                         {filteredRegions.map((r) => (
                           <button
                             key={r.isoCode}
@@ -314,12 +344,12 @@ export function OnboardingScreen() {
                             }}
                             className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs rounded-lg transition-colors ${
                               selectedRegion?.isoCode === r.isoCode
-                                ? 'bg-brand/10 text-brand font-bold'
-                                : 'hover:bg-muted text-foreground'
+                                ? 'bg-brand-50 text-brand-600 font-bold'
+                                : 'hover:bg-neutral-100 text-neutral-800'
                             }`}
                           >
                             <span>{r.name}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono">{r.isoCode}</span>
+                            <span className="text-[10px] text-neutral-400 font-mono">{r.isoCode}</span>
                           </button>
                         ))}
                       </div>
@@ -327,15 +357,15 @@ export function OnboardingScreen() {
                   )}
                 </div>
               ) : (
-                <div className="p-3.5 rounded-xl border border-border bg-muted/20 text-xs text-muted-foreground">
+                <div className="p-3.5 rounded-xl border border-neutral-200 bg-neutral-50 text-xs text-neutral-500">
                   Direct national jurisdiction ({selectedCountry.name})
                 </div>
               )}
             </div>
 
-            {/* 3. Business Role (Requirement 5: Three large selectable cards) */}
+            {/* 3. Business Role */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">
                 3. What is your role in the supply chain?
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -345,17 +375,17 @@ export function OnboardingScreen() {
                   onClick={() => setRole('FARMER')}
                   className={`p-4 rounded-2xl border text-left transition-all relative ${
                     role === 'FARMER'
-                      ? 'border-brand bg-brand/5 ring-2 ring-brand shadow-md'
-                      : 'border-border bg-background hover:border-muted-foreground/30'
+                      ? 'border-brand-500 bg-brand-50/70 ring-2 ring-brand-500 shadow-sm'
+                      : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
                   }`}
                 >
                   <div className="text-2xl mb-2">🌱</div>
-                  <div className="font-bold text-foreground text-sm">Farmer</div>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  <div className="font-bold text-neutral-900 text-sm">Farmer</div>
+                  <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
                     Produces agricultural goods at origin.
                   </p>
                   {role === 'FARMER' && (
-                    <CheckCircle2 className="w-4 h-4 text-brand absolute top-3 right-3" />
+                    <CheckCircle2 className="w-4 h-4 text-brand-600 absolute top-3 right-3" />
                   )}
                 </button>
 
@@ -365,17 +395,17 @@ export function OnboardingScreen() {
                   onClick={() => setRole('DISTRIBUTOR')}
                   className={`p-4 rounded-2xl border text-left transition-all relative ${
                     role === 'DISTRIBUTOR'
-                      ? 'border-brand bg-brand/5 ring-2 ring-brand shadow-md'
-                      : 'border-border bg-background hover:border-muted-foreground/30'
+                      ? 'border-brand-500 bg-brand-50/70 ring-2 ring-brand-500 shadow-sm'
+                      : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
                   }`}
                 >
                   <div className="text-2xl mb-2">🚚</div>
-                  <div className="font-bold text-foreground text-sm">Distributor</div>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  <div className="font-bold text-neutral-900 text-sm">Distributor</div>
+                  <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
                     Moves goods from producers to destinations.
                   </p>
                   {role === 'DISTRIBUTOR' && (
-                    <CheckCircle2 className="w-4 h-4 text-brand absolute top-3 right-3" />
+                    <CheckCircle2 className="w-4 h-4 text-brand-600 absolute top-3 right-3" />
                   )}
                 </button>
 
@@ -385,36 +415,36 @@ export function OnboardingScreen() {
                   onClick={() => setRole('COLLECTOR')}
                   className={`p-4 rounded-2xl border text-left transition-all relative ${
                     role === 'COLLECTOR'
-                      ? 'border-brand bg-brand/5 ring-2 ring-brand shadow-md'
-                      : 'border-border bg-background hover:border-muted-foreground/30'
+                      ? 'border-brand-500 bg-brand-50/70 ring-2 ring-brand-500 shadow-sm'
+                      : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
                   }`}
                 >
                   <div className="text-2xl mb-2">📦</div>
-                  <div className="font-bold text-foreground text-sm">Collector</div>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  <div className="font-bold text-neutral-900 text-sm">Collector</div>
+                  <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
                     Receives goods at the urban destination.
                   </p>
                   {role === 'COLLECTOR' && (
-                    <CheckCircle2 className="w-4 h-4 text-brand absolute top-3 right-3" />
+                    <CheckCircle2 className="w-4 h-4 text-brand-600 absolute top-3 right-3" />
                   )}
                 </button>
               </div>
             </div>
 
-            {/* 4. Business Name (Requirement 6: Do not assume business name is user's name) */}
+            {/* 4. Business Name */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
                 4. Business name
               </label>
               <div className="relative">
-                <Building2 className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3.5 pointer-events-none" />
+                <Building2 className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3.5 pointer-events-none" />
                 <input
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   placeholder={`e.g. ${resolvedName} Fresh Logistics`}
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs"
                 />
               </div>
             </div>
@@ -424,7 +454,7 @@ export function OnboardingScreen() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3.5 text-sm font-bold text-brand-foreground shadow hover:opacity-95 disabled:opacity-50 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-600 py-3.5 text-sm font-bold text-white shadow-md hover:shadow-lg disabled:opacity-50 transition-all cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -443,88 +473,88 @@ export function OnboardingScreen() {
         </div>
       )}
 
-      {/* STEP 2: Demo Initialization Screen (Requirements 7, 8, 9, 10, 15) */}
+      {/* STEP 2: Demo Initialization Screen */}
       {step === 2 && (
-        <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl animate-in zoom-in-95 duration-200">
+        <div className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-xl animate-in zoom-in-95 duration-200">
           <div className="text-center mb-6">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 mb-3">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 mb-3">
               <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground">Your Logistics Node is Ready</h2>
-            <p className="text-xs text-muted-foreground mt-1">
+            <h2 className="text-2xl font-bold text-neutral-900">Your Logistics Node is Ready</h2>
+            <p className="text-xs text-neutral-600 mt-1">
               Registered as <strong>{createdNode?.name || businessName}</strong> ({role}) in{' '}
               {selectedRegion?.name || selectedCountry.name}.
             </p>
           </div>
 
-          {/* Prominent Orange Supply Chain Demo Card (Requirement 7 & 15) */}
-          <div className="rounded-2xl border-2 border-brand/30 bg-gradient-to-b from-brand/5 to-transparent p-6 mb-6">
-            <div className="flex items-center gap-2 text-brand font-bold text-xs uppercase tracking-wider mb-2">
+          {/* Prominent Orange Supply Chain Demo Card */}
+          <div className="rounded-2xl border-2 border-brand-500/30 bg-gradient-to-b from-brand-50/80 to-white p-6 mb-6">
+            <div className="flex items-center gap-2 text-brand-600 font-bold text-xs uppercase tracking-wider mb-2">
               <span>🍊 Orange Supply Chain Pilot</span>
-              <span className="px-2 py-0.5 rounded-full bg-brand/10 text-[10px]">RECOMMENDED</span>
+              <span className="px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-[10px]">RECOMMENDED</span>
             </div>
 
-            <h3 className="text-lg font-bold text-foreground">
+            <h3 className="text-lg font-bold text-neutral-900">
               Ready to explore LogiSync? Initialize Demo
             </h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
               Experience a live multi-participant supply chain transaction using fresh oranges. Real database records
               will be created for this workflow.
             </p>
 
             {/* Visual Flow Topology */}
-            <div className="my-5 py-4 px-4 rounded-xl bg-background border border-border flex items-center justify-between text-center text-xs font-semibold">
+            <div className="my-5 py-4 px-4 rounded-xl bg-white border border-neutral-200 flex items-center justify-between text-center text-xs font-semibold shadow-xs">
               <div className="flex flex-col items-center">
                 <span className="text-lg mb-1">🌱</span>
-                <span className="text-[11px] text-foreground">Farmer</span>
-                <span className="text-[10px] text-muted-foreground">Nashik</span>
+                <span className="text-[11px] text-neutral-900 font-bold">Farmer</span>
+                <span className="text-[10px] text-neutral-500">Nashik</span>
               </div>
-              <ArrowRight className="w-4 h-4 text-brand" />
+              <ArrowRight className="w-4 h-4 text-brand-500" />
               <div className="flex flex-col items-center">
                 <span className="text-lg mb-1">🚚</span>
-                <span className="text-[11px] text-brand font-bold">
+                <span className="text-[11px] text-brand-600 font-bold">
                   {role === 'DISTRIBUTOR' ? 'You (Distributor)' : 'Distributor'}
                 </span>
-                <span className="text-[10px] text-muted-foreground">Transit</span>
+                <span className="text-[10px] text-neutral-500">Transit</span>
               </div>
-              <ArrowRight className="w-4 h-4 text-brand" />
+              <ArrowRight className="w-4 h-4 text-brand-500" />
               <div className="flex flex-col items-center">
                 <span className="text-lg mb-1">📦</span>
-                <span className="text-[11px] text-foreground">
+                <span className="text-[11px] text-neutral-900 font-bold">
                   {role === 'COLLECTOR' ? 'You (Collector)' : 'Collector'}
                 </span>
-                <span className="text-[10px] text-muted-foreground">Pune</span>
+                <span className="text-[10px] text-neutral-500">Pune</span>
               </div>
             </div>
 
-            {/* Personalized Role Specs (Requirement 9 & 10) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs border-t border-border/60 pt-4 text-left">
+            {/* Personalized Role Specs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs border-t border-neutral-200 pt-4 text-left">
               <div>
-                <span className="text-muted-foreground text-[10px]">Your Role:</span>
-                <div className="font-bold text-foreground">{role}</div>
+                <span className="text-neutral-500 text-[10px]">Your Role:</span>
+                <div className="font-bold text-neutral-900">{role}</div>
               </div>
               <div>
-                <span className="text-muted-foreground text-[10px]">Commodity:</span>
-                <div className="font-bold text-foreground">Oranges</div>
+                <span className="text-neutral-500 text-[10px]">Commodity:</span>
+                <div className="font-bold text-neutral-900">Oranges</div>
               </div>
               <div>
-                <span className="text-muted-foreground text-[10px]">Quantity:</span>
-                <div className="font-bold text-foreground">1,000 kg</div>
+                <span className="text-neutral-500 text-[10px]">Quantity:</span>
+                <div className="font-bold text-neutral-900">1,000 kg</div>
               </div>
               <div>
-                <span className="text-muted-foreground text-[10px]">Corridor:</span>
-                <div className="font-bold text-foreground">Maharashtra → Pune</div>
+                <span className="text-neutral-500 text-[10px]">Corridor:</span>
+                <div className="font-bold text-neutral-900">Maharashtra → Pune</div>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons: Big Recommended Button + Smaller Skip for now */}
+          {/* Action Buttons */}
           <div className="space-y-3">
             <button
               type="button"
               disabled={isSubmitting}
               onClick={handleInitializeDemo}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-4 text-sm font-bold text-brand-foreground shadow-lg hover:opacity-95 disabled:opacity-50 transition-all"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-600 py-4 text-sm font-bold text-white shadow-lg hover:shadow-xl disabled:opacity-50 transition-all cursor-pointer"
             >
               {isSubmitting ? (
                 <>
@@ -542,7 +572,7 @@ export function OnboardingScreen() {
               type="button"
               disabled={isSubmitting}
               onClick={handleSkipDemo}
-              className="w-full py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-neutral-500 hover:text-neutral-900 transition-colors cursor-pointer"
             >
               Skip for now → (Open clean dashboard)
             </button>

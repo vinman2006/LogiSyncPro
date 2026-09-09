@@ -15,6 +15,8 @@ const config: Config = {
           muted: '#F1F5F9',
         },
         brand: {
+          DEFAULT: '#F97316',
+          foreground: '#FFFFFF',
           50: '#FFF7ED',
           500: '#F97316',
           600: '#EA580C',
@@ -47,6 +49,24 @@ const config: Config = {
           700: '#334155',
           800: '#1E293B',
           900: '#0F172A',
+        },
+        card: {
+          DEFAULT: '#FFFFFF',
+          foreground: '#0F172A',
+        },
+        background: '#FFFFFF',
+        foreground: '#0F172A',
+        popover: {
+          DEFAULT: '#FFFFFF',
+          foreground: '#0F172A',
+        },
+        muted: {
+          DEFAULT: '#F1F5F9',
+          foreground: '#64748B',
+        },
+        destructive: {
+          DEFAULT: '#EF4444',
+          foreground: '#FFFFFF',
         },
         border: '#E2E8F0',
       },

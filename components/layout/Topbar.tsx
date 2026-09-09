@@ -76,16 +76,16 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="hidden sm:flex flex-col">
+        <div className="hidden sm:flex flex-col shrink-0">
           <span className="text-xs text-neutral-400 font-medium">LogiSync Pro</span>
-          <span className="text-sm font-heading font-semibold text-neutral-900 truncate">
+          <span className="text-sm font-heading font-semibold text-neutral-900 truncate max-w-[160px]">
             {pageTitle || 'Operations Overview'}
           </span>
         </div>
       </div>
 
       {/* Middle Section: Global Search Bar (Click or Ctrl+K triggers SearchDialog) */}
-      <div className="flex-1 max-w-md mx-2 sm:mx-4">
+      <div className="flex-1 max-w-xs md:max-w-sm lg:max-w-md mx-2 sm:mx-4 min-w-[140px]">
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
@@ -102,8 +102,8 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
 
       {/* Right Section: Node Switcher + Hub Switcher + Alert Bell + User Menu */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Logistics Node Role Quick Switcher Pills (Requirement 39 & 48) */}
-        <div className="hidden xl:flex items-center gap-1 p-1 rounded-xl bg-neutral-100 border border-neutral-200 text-xs">
+        {/* Logistics Node Role Quick Switcher Pills */}
+        <div className="hidden 2xl:flex items-center gap-1 p-1 rounded-xl bg-neutral-100 border border-neutral-200 text-xs">
           <button
             type="button"
             onClick={() => switchDemoRole('DISTRIBUTOR')}
@@ -329,18 +329,18 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
               {avatarLetter}
             </div>
 
-            <div className="hidden xl:flex flex-col text-left">
-              <span className="text-xs font-medium text-neutral-900 leading-tight">
+            <div className="hidden 2xl:flex flex-col text-left max-w-[130px]">
+              <span className="text-xs font-medium text-neutral-900 leading-tight truncate">
                 {displayName}
               </span>
-              <span className="text-[10px] text-neutral-500 leading-tight truncate max-w-[140px]">
+              <span className="text-[10px] text-neutral-500 leading-tight truncate">
                 {displayBusiness}
               </span>
             </div>
 
             {/* Role Pill */}
             <span
-              className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800 uppercase tracking-wider"
+              className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800 uppercase tracking-wider shrink-0 whitespace-nowrap"
               title={`Active Role: ${displayRole}`}
             >
               {displayRole}
