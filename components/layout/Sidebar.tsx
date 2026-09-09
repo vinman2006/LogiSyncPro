@@ -163,11 +163,12 @@ export function Sidebar({
       {/* Sidebar Container */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-primary-subtle border-r border-border transition-all duration-300 ease-in-out',
+          'fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-white border-r border-border transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none',
           // Mobile state: slide in / out
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-          // Desktop width: 260px expanded / 72px collapsed
-          isCollapsed ? 'w-[72px]' : 'w-[260px]'
+          // Width: On mobile always full drawer w-[280px], on desktop 260px expanded or 72px collapsed
+          'w-[280px]',
+          isCollapsed ? 'lg:w-[72px]' : 'lg:w-[260px]'
         )}
       >
         {/* Brand Header */}
@@ -176,35 +177,33 @@ export function Sidebar({
             href="/dashboard"
             className={cn(
               'flex items-center gap-2.5 overflow-hidden transition-all',
-              isCollapsed && 'justify-center w-full px-0'
+              isCollapsed && 'lg:justify-center lg:w-full lg:px-0'
             )}
             onClick={() => onMobileClose()}
           >
             {/* Logo Mark: Concept 1 Signal + Motion */}
             <LogoIcon size={34} />
 
-            {!isCollapsed && (
-              <div className="flex flex-col truncate">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-heading font-bold text-base text-neutral-900 tracking-tight">
-                    LogiSync
-                  </span>
-                  <span className="font-heading font-extrabold text-xs px-1.5 py-0.5 rounded bg-brand-50 text-brand-600 border border-brand-500/20">
-                    PRO
-                  </span>
-                </div>
-                <span className="text-[10px] text-neutral-500 font-medium tracking-wide truncate">
-                  MSME Logistics Platform
+            <div className={cn('flex flex-col truncate', isCollapsed && 'lg:hidden')}>
+              <div className="flex items-center gap-1.5">
+                <span className="font-heading font-bold text-base text-neutral-900 tracking-tight">
+                  LogiSync
+                </span>
+                <span className="font-heading font-extrabold text-xs px-1.5 py-0.5 rounded bg-brand-50 text-brand-600 border border-brand-500/20">
+                  PRO
                 </span>
               </div>
-            )}
+              <span className="text-[10px] text-neutral-500 font-medium tracking-wide truncate">
+                MSME Logistics Platform
+              </span>
+            </div>
           </Link>
 
           {/* Close button on mobile */}
           <button
             type="button"
             onClick={onMobileClose}
-            className="p-1.5 text-neutral-500 hover:text-neutral-800 rounded-md lg:hidden"
+            className="p-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg lg:hidden cursor-pointer"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
@@ -214,15 +213,13 @@ export function Sidebar({
         {/* Navigation Items (Scrollable) */}
         <nav
           aria-label="Main Navigation"
-          className="flex-1 overflow-y-auto px-3 py-4 space-y-6"
+          className="flex-1 overflow-y-auto px-3 py-4 space-y-5"
         >
           {NAV_SECTIONS.map((section) => (
             <div key={section.title} className="space-y-1">
-              {!isCollapsed && (
-                <div className="px-3 pb-1.5 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
-                  {section.title}
-                </div>
-              )}
+              <div className={cn('px-3 pb-1.5 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider', isCollapsed && 'lg:hidden')}>
+                {section.title}
+              </div>
 
               <div className="space-y-0.5">
                 {section.items.map((item) => {
@@ -239,11 +236,11 @@ export function Sidebar({
                       onClick={() => onMobileClose()}
                       title={isCollapsed ? item.label : undefined}
                       className={cn(
-                        'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors relative',
+                        'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors relative min-h-[44px]',
                         isActive
-                          ? 'border-l-4 border-brand-600 bg-brand-50 text-brand-600 font-medium shadow-sm'
-                          : 'text-neutral-600 hover:bg-neutral-100/80 hover:text-neutral-900 font-normal',
-                        isCollapsed && 'justify-center px-0'
+                          ? 'border-l-4 border-brand-600 bg-brand-50 text-brand-600 font-semibold shadow-xs'
+                          : 'text-neutral-600 hover:bg-neutral-100/80 hover:text-neutral-900 font-medium',
+                        isCollapsed && 'lg:justify-center lg:px-0'
                       )}
                     >
                       <Icon
@@ -256,20 +253,19 @@ export function Sidebar({
                         strokeWidth={isActive ? 2.2 : 1.8}
                       />
 
-                      {!isCollapsed && (
-                        <span className="truncate flex-1">{item.label}</span>
-                      )}
+                      <span className={cn('truncate flex-1', isCollapsed && 'lg:hidden')}>{item.label}</span>
 
-                      {!isCollapsed && item.badge && (
+                      {item.badge && (
                         <span
                           className={cn(
                             'ml-auto text-[11px] font-semibold px-1.5 py-0.2 rounded-full tabular-nums',
+                            isCollapsed && 'lg:hidden',
                             item.badgeVariant === 'critical' &&
                               'bg-critical-50 text-critical-600 border border-critical-600/20',
                             item.badgeVariant === 'brand' &&
                               'bg-brand-50 text-brand-600 border border-brand-500/20',
-                            item.badgeVariant === 'neutral' &&
-                              'bg-neutral-100 text-neutral-600'
+                            (!item.badgeVariant || item.badgeVariant === 'neutral') &&
+                              'bg-neutral-100 text-neutral-600 border border-neutral-200'
                           )}
                         >
                           {item.badge}

@@ -196,25 +196,25 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-neutral-900 overflow-x-hidden selection:bg-brand-500/20">
       {/* ─── Navbar ─────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 h-16 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 shadow-xs">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 md:px-12 h-16 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 shadow-xs">
         <Link href="/" className="flex items-center group">
-          <Logo variant="full" theme="light" size={34} />
+          <Logo variant="full" theme="light" size={32} />
         </Link>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-600">
           <a href="#features" className="hover:text-neutral-950 transition-colors">Features</a>
           <a href="#stats" className="hover:text-neutral-950 transition-colors">Results</a>
           <a href="#testimonials" className="hover:text-neutral-950 transition-colors">Clients</a>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/auth/login"
-            className="px-4 py-2 text-sm font-semibold text-neutral-700 hover:text-neutral-950 transition-colors"
+            className="px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-700 hover:text-neutral-950 transition-colors"
           >
             Sign In
           </Link>
           <Link
             href="/auth/register"
-            className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-all duration-200 shadow-md shadow-brand-600/25 hover:shadow-brand-600/35"
+            className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-all duration-200 shadow-md shadow-brand-600/25 hover:shadow-brand-600/35 whitespace-nowrap"
           >
             Get Started
           </Link>

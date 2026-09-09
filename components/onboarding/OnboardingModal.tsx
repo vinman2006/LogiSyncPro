@@ -89,8 +89,8 @@ export function OnboardingModal({ isOpen, onComplete, onClose }: OnboardingModal
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-6 md:p-8 shadow-2xl text-neutral-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 sm:p-8 shadow-2xl text-neutral-900">
         {/* Progress Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -323,7 +323,7 @@ export function OnboardingModal({ isOpen, onComplete, onClose }: OnboardingModal
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-foreground mb-1">Operating City</label>
                   <input

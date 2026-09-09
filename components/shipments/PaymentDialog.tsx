@@ -71,17 +71,17 @@ export function PaymentDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-6 md:p-8 shadow-2xl text-neutral-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 sm:p-8 shadow-2xl text-neutral-900">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
+        <div className="flex flex-wrap items-center justify-between border-b border-neutral-200 pb-4 mb-5 gap-2">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600">Multi-Rail Settlement Gateway</span>
-            <h2 className="text-xl font-bold text-neutral-900">Settle Shipment {shipment.readable_id}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-neutral-900">Settle Shipment {shipment.readable_id}</h2>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <span className="text-xs text-neutral-500">Settlement Total</span>
-            <div className="text-2xl font-bold font-mono text-neutral-900">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-neutral-900">
               ₹{Number(shipment.value).toLocaleString('en-IN')}
             </div>
           </div>

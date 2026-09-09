@@ -85,15 +85,27 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
       </div>
 
       {/* Middle Section: Global Search Bar (Click or Ctrl+K triggers SearchDialog) */}
-      <div className="flex-1 max-w-xs md:max-w-sm lg:max-w-md mx-2 sm:mx-4 min-w-[140px]">
+      <div className="flex-1 max-w-xs md:max-w-sm lg:max-w-md mx-1 sm:mx-4 flex items-center justify-end sm:justify-start">
+        {/* Mobile Search Icon Button (< sm) */}
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="relative w-full h-9 pl-9 pr-12 text-left text-xs sm:text-sm bg-neutral-100/80 hover:bg-neutral-100 focus:bg-white text-neutral-500 rounded-lg border border-transparent hover:border-border transition-all flex items-center"
+          className="sm:hidden p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+          aria-label="Open global search"
+          title="Search (Ctrl + K)"
+        >
+          <Search className="w-5 h-5" />
+        </button>
+
+        {/* Desktop / Tablet Search Bar (sm+) */}
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          className="hidden sm:flex relative w-full h-9 pl-9 pr-12 text-left text-xs sm:text-sm bg-neutral-100/80 hover:bg-neutral-100 focus:bg-white text-neutral-500 rounded-lg border border-transparent hover:border-border transition-all items-center"
           title="Open Global Search (Ctrl + K)"
         >
           <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <span className="truncate">Search consignment, truck (e.g. MH-12), or SKU...</span>
+          <span className="truncate">Search consignment, truck, SKU...</span>
           <kbd className="hidden md:inline-flex items-center gap-0.5 absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 bg-white border border-neutral-300 rounded shadow-xs pointer-events-none">
             Ctrl+K
           </kbd>
@@ -101,7 +113,7 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
       </div>
 
       {/* Right Section: Node Switcher + Hub Switcher + Alert Bell + User Menu */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Logistics Node Role Quick Switcher Pills */}
         <div className="hidden 2xl:flex items-center gap-1 p-1 rounded-xl bg-neutral-100 border border-neutral-200 text-xs">
           <button
@@ -338,9 +350,9 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
               </span>
             </div>
 
-            {/* Role Pill */}
+            {/* Role Pill - Hidden on mobile (< sm) to prevent squishing */}
             <span
-              className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800 uppercase tracking-wider shrink-0 whitespace-nowrap"
+              className="hidden sm:inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800 uppercase tracking-wider shrink-0 whitespace-nowrap"
               title={`Active Role: ${displayRole}`}
             >
               {displayRole}

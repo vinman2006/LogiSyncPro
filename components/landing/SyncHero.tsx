@@ -447,42 +447,25 @@ export default function SyncHero() {
 
       {/* Bottom-left: Chaos [ ● Chaos   HIGH ENTROPY ] */}
       <div
-        className="absolute bottom-5 left-5 md:bottom-6 md:left-8 z-20 pointer-events-none flex items-center gap-2 shadow-xs"
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #FEE2E2',
-          borderRadius: '12px',
-          padding: '7px 12px',
-        }}
+        className="absolute bottom-3 left-3 sm:bottom-5 sm:left-5 md:bottom-6 md:left-8 z-20 pointer-events-none flex items-center gap-1.5 sm:gap-2 shadow-xs bg-white border border-red-100 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2"
       >
         <span
-          className="inline-block rounded-full"
+          className="inline-block rounded-full w-2 h-2 bg-red-400"
           style={{
-            width: '8px',
-            height: '8px',
-            backgroundColor: '#F87171',
             animation: 'chaosPulse 1.4s ease-in-out infinite',
           }}
         />
         <span
+          className="text-xs sm:text-sm text-neutral-900"
           style={{
             fontFamily: 'Georgia, serif',
             fontStyle: 'italic',
-            fontSize: '13px',
-            color: '#111827',
           }}
         >
           Chaos
         </span>
         <span
-          style={{
-            fontFamily: 'monospace',
-            textTransform: 'uppercase',
-            fontSize: '10px',
-            letterSpacing: '0.07em',
-            color: '#9CA3AF',
-            marginLeft: '2px',
-          }}
+          className="hidden xs:inline-block font-mono uppercase text-[9px] sm:text-[10px] tracking-wider text-neutral-400 ml-0.5"
         >
           HIGH ENTROPY
         </span>
@@ -490,42 +473,23 @@ export default function SyncHero() {
 
       {/* Bottom-right: Sync [ ● Sync   0% ENTROPY ] */}
       <div
-        className="absolute bottom-5 right-5 md:bottom-6 md:right-8 z-20 pointer-events-none flex items-center gap-2 shadow-xs"
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #DBEAFE',
-          borderRadius: '12px',
-          padding: '7px 12px',
-        }}
+        className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 md:bottom-6 md:right-8 z-20 pointer-events-none flex items-center gap-1.5 sm:gap-2 shadow-xs bg-white border border-blue-100 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2"
       >
         {/* Blue dot: calm, static, NO pulse */}
         <span
-          className="inline-block rounded-full"
-          style={{
-            width: '8px',
-            height: '8px',
-            backgroundColor: '#38BDF8',
-          }}
+          className="inline-block rounded-full w-2 h-2 bg-sky-400"
         />
         <span
+          className="text-xs sm:text-sm text-neutral-900"
           style={{
             fontFamily: 'Georgia, serif',
             fontStyle: 'italic',
-            fontSize: '13px',
-            color: '#111827',
           }}
         >
           Sync
         </span>
         <span
-          style={{
-            fontFamily: 'monospace',
-            textTransform: 'uppercase',
-            fontSize: '10px',
-            letterSpacing: '0.07em',
-            color: '#9CA3AF',
-            marginLeft: '2px',
-          }}
+          className="hidden xs:inline-block font-mono uppercase text-[9px] sm:text-[10px] tracking-wider text-neutral-400 ml-0.5"
         >
           0% ENTROPY
         </span>
