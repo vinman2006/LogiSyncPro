@@ -62,11 +62,12 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
   const [hubDropdownOpen, setHubDropdownOpen] = useState(false);
   const [alertDropdownOpen, setAlertDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur-md border-b border-border px-4 sm:px-6 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur-md border-b border-border px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-3">
       {/* Left Section: Mobile Menu Trigger + Page Title */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
         <button
           type="button"
           onClick={onOpenMobileMenu}
@@ -77,15 +78,15 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
         </button>
 
         <div className="hidden sm:flex flex-col shrink-0">
-          <span className="text-xs text-neutral-400 font-medium">LogiSync Pro</span>
-          <span className="text-sm font-heading font-semibold text-neutral-900 truncate max-w-[160px]">
+          <span className="text-[11px] text-neutral-400 font-medium leading-tight">LogiSync Pro</span>
+          <span className="text-sm font-heading font-semibold text-neutral-900 truncate max-w-[140px] md:max-w-[180px] leading-tight">
             {pageTitle || 'Operations Overview'}
           </span>
         </div>
       </div>
 
       {/* Middle Section: Global Search Bar (Click or Ctrl+K triggers SearchDialog) */}
-      <div className="flex-1 max-w-xs md:max-w-sm lg:max-w-md mx-1 sm:mx-4 flex items-center justify-end sm:justify-start">
+      <div className="flex-1 max-w-xs md:max-w-sm lg:max-w-md mx-1 sm:mx-4 flex items-center justify-start min-w-0">
         {/* Mobile Search Icon Button (< sm) */}
         <button
           type="button"
@@ -101,11 +102,11 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="hidden sm:flex relative w-full h-9 pl-9 pr-12 text-left text-xs sm:text-sm bg-neutral-100/80 hover:bg-neutral-100 focus:bg-white text-neutral-500 rounded-lg border border-transparent hover:border-border transition-all items-center"
+          className="hidden sm:flex relative w-full h-9 pl-9 pr-12 text-left text-xs sm:text-sm bg-neutral-100/80 hover:bg-neutral-100 focus:bg-white text-neutral-500 rounded-lg border border-transparent hover:border-border transition-all items-center min-w-0"
           title="Open Global Search (Ctrl + K)"
         >
           <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <span className="truncate">Search consignment, truck, SKU...</span>
+          <span className="truncate pr-2">Search consignment, truck, SKU...</span>
           <kbd className="hidden md:inline-flex items-center gap-0.5 absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 bg-white border border-neutral-300 rounded shadow-xs pointer-events-none">
             Ctrl+K
           </kbd>
@@ -113,14 +114,14 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
       </div>
 
       {/* Right Section: Node Switcher + Hub Switcher + Alert Bell + User Menu */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        {/* Logistics Node Role Quick Switcher Pills */}
-        <div className="hidden 2xl:flex items-center gap-1 p-1 rounded-xl bg-neutral-100 border border-neutral-200 text-xs">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Logistics Node Role Quick Switcher: 3 pills on ultra-wide screens (3xl: >= 1800px) */}
+        <div className="hidden 3xl:flex items-center gap-1 p-1 rounded-xl bg-neutral-100 border border-neutral-200 text-xs shrink-0">
           <button
             type="button"
             onClick={() => switchDemoRole('DISTRIBUTOR')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition-all ${
-              currentNode?.role === 'DISTRIBUTOR'
+              (!currentNode || currentNode?.role === 'DISTRIBUTOR')
                 ? 'bg-brand text-brand-foreground shadow-xs'
                 : 'text-neutral-600 hover:text-neutral-900'
             }`}
@@ -157,10 +158,116 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
           </button>
         </div>
 
+        {/* Compact Persona Dropdown for xl to 2xl screens (fits perfectly without crowding) */}
+        <div className="relative hidden xl:block 3xl:hidden shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setRoleDropdownOpen(!roleDropdownOpen);
+              setHubDropdownOpen(false);
+              setAlertDropdownOpen(false);
+              setUserMenuOpen(false);
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-brand text-brand-foreground shadow-xs hover:bg-brand/90 transition-all"
+            title="Switch Node Persona"
+          >
+            {currentNode?.role === 'COLLECTOR' ? (
+              <Package className="h-3.5 w-3.5" />
+            ) : currentNode?.role === 'FARMER' ? (
+              <Sprout className="h-3.5 w-3.5" />
+            ) : (
+              <Truck className="h-3.5 w-3.5" />
+            )}
+            <span className="capitalize">{currentNode?.role ? currentNode.role.toLowerCase() : 'Distributor'}</span>
+            <ChevronDown className="w-3 h-3 opacity-80" />
+          </button>
+
+          {roleDropdownOpen && (
+            <div
+              className="absolute right-0 mt-2 w-56 bg-white border border-border rounded-xl shadow-lg p-1.5 z-50 animate-in fade-in slide-in-from-top-1"
+              onMouseLeave={() => setRoleDropdownOpen(false)}
+            >
+              <div className="px-2.5 py-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider border-b border-neutral-100">
+                Switch Live Node Persona
+              </div>
+              <div className="space-y-0.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchDemoRole('DISTRIBUTOR');
+                    setRoleDropdownOpen(false);
+                  }}
+                  className={cn(
+                    'w-full text-left px-2.5 py-2 rounded-lg flex items-center justify-between text-xs transition-colors',
+                    (!currentNode || currentNode.role === 'DISTRIBUTOR')
+                      ? 'bg-brand-50 text-brand-600 font-semibold'
+                      : 'hover:bg-neutral-50 text-neutral-700'
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-brand" />
+                    <div>
+                      <div className="font-medium leading-tight">Distributor</div>
+                      <div className="text-[10px] text-neutral-400 truncate max-w-[140px]">Pune Fresh Logistics</div>
+                    </div>
+                  </div>
+                  {(!currentNode || currentNode.role === 'DISTRIBUTOR') && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchDemoRole('COLLECTOR');
+                    setRoleDropdownOpen(false);
+                  }}
+                  className={cn(
+                    'w-full text-left px-2.5 py-2 rounded-lg flex items-center justify-between text-xs transition-colors',
+                    currentNode?.role === 'COLLECTOR'
+                      ? 'bg-brand-50 text-brand-600 font-semibold'
+                      : 'hover:bg-neutral-50 text-neutral-700'
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <div className="font-medium leading-tight">Collector</div>
+                      <div className="text-[10px] text-neutral-400 truncate max-w-[140px]">Pune City Produce</div>
+                    </div>
+                  </div>
+                  {currentNode?.role === 'COLLECTOR' && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchDemoRole('FARMER');
+                    setRoleDropdownOpen(false);
+                  }}
+                  className={cn(
+                    'w-full text-left px-2.5 py-2 rounded-lg flex items-center justify-between text-xs transition-colors',
+                    currentNode?.role === 'FARMER'
+                      ? 'bg-brand-50 text-brand-600 font-semibold'
+                      : 'hover:bg-neutral-50 text-neutral-700'
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Sprout className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <div className="font-medium leading-tight">Farmer</div>
+                      <div className="text-[10px] text-neutral-400 truncate max-w-[140px]">Maharashtra Farm</div>
+                    </div>
+                  </div>
+                  {currentNode?.role === 'FARMER' && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Quick Neon DB Live Inspector Button */}
         <Link
           href="/database"
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-all"
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-all shrink-0"
           title="Open Live Neon DB Ledger"
         >
           <Database className="w-3.5 h-3.5 text-emerald-600" />
@@ -169,19 +276,20 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
         </Link>
 
         {/* Logistics Hub Switcher Dropdown */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             type="button"
             onClick={() => {
               setHubDropdownOpen(!hubDropdownOpen);
               setAlertDropdownOpen(false);
               setUserMenuOpen(false);
+              setRoleDropdownOpen(false);
             }}
             className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 text-xs font-medium text-neutral-700 bg-neutral-50 hover:bg-neutral-100 border border-border rounded-lg transition-colors"
             title="Switch Active Logistics Hub"
           >
             <Building2 className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="hidden md:inline max-w-[130px] truncate">
+            <span className="hidden md:inline max-w-[120px] truncate">
               {currentNode?.name || selectedHub.name}
             </span>
             <span className="md:hidden text-xs">{currentNode?.role?.slice(0, 4) || selectedHub.code}</span>
@@ -222,13 +330,14 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
         </div>
 
         {/* Alerts & Multi-User Notifications Bell Dropdown */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             type="button"
             onClick={() => {
               setAlertDropdownOpen(!alertDropdownOpen);
               setHubDropdownOpen(false);
               setUserMenuOpen(false);
+              setRoleDropdownOpen(false);
             }}
             className="relative p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
             aria-label={`View alerts (${unreadAlertsCount + unreadCount} unread)`}
@@ -337,22 +446,23 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
         </div>
 
         {/* User Profile & Role Switcher Menu */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             type="button"
             onClick={() => {
               setUserMenuOpen(!userMenuOpen);
               setHubDropdownOpen(false);
               setAlertDropdownOpen(false);
+              setRoleDropdownOpen(false);
             }}
             className="flex items-center gap-2 pl-2 border-l border-border hover:opacity-90 transition-opacity"
             title="User Profile & Role Permissions"
           >
-            <div className="w-8 h-8 rounded-full bg-brand-50 border border-brand-500/20 text-brand-600 flex items-center justify-center text-xs font-bold shadow-xs">
+            <div className="w-8 h-8 rounded-full bg-brand-50 border border-brand-500/20 text-brand-600 flex items-center justify-center text-xs font-bold shadow-xs shrink-0">
               {avatarLetter}
             </div>
 
-            <div className="hidden 2xl:flex flex-col text-left max-w-[130px]">
+            <div className="hidden xl:flex flex-col text-left max-w-[120px]">
               <span className="text-xs font-medium text-neutral-900 leading-tight truncate">
                 {displayName}
               </span>
@@ -361,9 +471,9 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
               </span>
             </div>
 
-            {/* Role Pill - Hidden on mobile (< sm) to prevent squishing */}
+            {/* Role Pill */}
             <span
-              className="hidden sm:inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800 uppercase tracking-wider shrink-0 whitespace-nowrap"
+              className="hidden lg:inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800 uppercase tracking-wider shrink-0 whitespace-nowrap"
               title={`Active Role: ${displayRole}`}
             >
               {displayRole}
