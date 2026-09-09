@@ -19,7 +19,7 @@ import { useLogistics } from '@/lib/context/LogisticsContext';
 import { useNetwork } from '@/lib/context/NetworkContext';
 import { MOCK_DATA_HUBS } from '@/lib/mock-data/dashboard';
 import { UserRole } from '@/lib/mock-data/types';
-import { Truck, Package, Sprout, LogOut } from 'lucide-react';
+import { Truck, Package, Sprout, LogOut, Database } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 
 interface TopbarProps {
@@ -156,6 +156,17 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
             <span>Farmer</span>
           </button>
         </div>
+
+        {/* Quick Neon DB Live Inspector Button */}
+        <Link
+          href="/database"
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-all"
+          title="Open Live Neon DB Ledger"
+        >
+          <Database className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Neon DB</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        </Link>
 
         {/* Logistics Hub Switcher Dropdown */}
         <div className="relative">
