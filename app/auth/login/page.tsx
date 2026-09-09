@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import gsap from 'gsap';
@@ -15,12 +15,13 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
+import { getAuthErrorMessage } from '@/lib/firebase/auth';
 import { LogoIcon } from '@/components/ui/Logo';
 
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get('from') || '/';
+  const from = searchParams.get('from') || '/dashboard';
   const { user, loading, signInWithGoogle, signInWithEmail } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -34,12 +35,19 @@ function LoginPageContent() {
   const cardRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  const getDestination = useCallback(() => {
+    if (!from || from === '/' || from.startsWith('/auth')) {
+      return '/dashboard';
+    }
+    return from;
+  }, [from]);
+
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
-      router.replace(from);
+      router.replace(getDestination());
     }
-  }, [user, loading, router, from]);
+  }, [user, loading, router, getDestination]);
 
   // GSAP entrance animations
   useEffect(() => {
@@ -85,10 +93,9 @@ function LoginPageContent() {
     setError('');
     try {
       await signInWithGoogle();
-      router.replace(from);
+      router.replace(getDestination());
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Google sign-in failed';
-      setError(message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim());
+      setError(getAuthErrorMessage(err));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -104,18 +111,9 @@ function LoginPageContent() {
     setError('');
     try {
       await signInWithEmail(email, password);
-      router.replace(from);
+      router.replace(getDestination());
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Sign-in failed';
-      const cleaned = message
-        .replace('Firebase: ', '')
-        .replace(/\(auth\/.*\)/, '')
-        .trim();
-      if (cleaned.includes('invalid-credential') || cleaned.includes('user-not-found')) {
-        setError('Invalid email or password. Please try again.');
-      } else {
-        setError(cleaned || 'An error occurred during sign-in.');
-      }
+      setError(getAuthErrorMessage(err));
       gsap.fromTo(
         cardRef.current,
         { x: -8 },
@@ -165,7 +163,7 @@ function LoginPageContent() {
       >
         {/* Logo & Branding */}
         <div className="auth-logo text-center mb-8">
-          <Link href="/landing" className="inline-flex flex-col items-center group">
+          <Link href="/" className="inline-flex flex-col items-center group">
             <LogoIcon size={56} className="mb-3 group-hover:scale-105 transition-transform duration-200 shadow-xl shadow-brand-600/30" />
             <div className="flex items-center gap-2">
               <span className="font-heading text-xl font-bold text-white tracking-tight">

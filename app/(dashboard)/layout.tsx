@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { SearchDialog } from '@/components/ui/SearchDialog';
 import { LogisticsProvider } from '@/lib/context/LogisticsContext';
+import { useAuth } from '@/lib/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({
@@ -14,6 +16,21 @@ export default function DashboardLayout({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, hasCompletedOnboarding, loading: authLoading } = useAuth();
+
+  // Navigation guard: Redirect to login if unauthenticated, or to onboarding if needed
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.replace(`/auth/login?from=${encodeURIComponent(pathname)}`);
+      return;
+    }
+    if (hasCompletedOnboarding === false && pathname !== '/onboarding') {
+      router.replace('/onboarding');
+    }
+  }, [user, hasCompletedOnboarding, authLoading, pathname, router]);
 
   // Auto-collapse sidebar on tablet screens (<=1024px)
   useEffect(() => {

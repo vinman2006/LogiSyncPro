@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   firebase_uid VARCHAR(128) UNIQUE NOT NULL,
   email VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
   display_name VARCHAR(255),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -13,6 +14,8 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   country VARCHAR(100) NOT NULL,
   country_code VARCHAR(10) NOT NULL,
+  region VARCHAR(100),
+  region_code VARCHAR(10),
   city VARCHAR(100),
   phone VARCHAR(50),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -20,10 +23,16 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 
 CREATE TABLE IF NOT EXISTS businesses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  business_name VARCHAR(255),
   name VARCHAR(255) NOT NULL,
   business_type VARCHAR(50) NOT NULL, -- 'FARMER', 'DISTRIBUTOR', 'COLLECTOR'
+  role VARCHAR(50),
   country VARCHAR(100) NOT NULL,
+  country_code VARCHAR(10),
+  region VARCHAR(100),
+  region_code VARCHAR(10),
   city VARCHAR(100) NOT NULL,
   status VARCHAR(50) DEFAULT 'VERIFIED',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -35,8 +44,10 @@ CREATE TABLE IF NOT EXISTS nodes (
   owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
   node_code VARCHAR(50) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
+  node_type VARCHAR(50),
   role VARCHAR(50) NOT NULL, -- 'FARMER', 'DISTRIBUTOR', 'COLLECTOR'
   country VARCHAR(100) NOT NULL,
+  region VARCHAR(100),
   city VARCHAR(100) NOT NULL,
   status VARCHAR(50) DEFAULT 'ACTIVE', -- 'ACTIVE', 'INACTIVE', 'PENDING', 'VERIFIED'
   commodities_handled TEXT[] DEFAULT ARRAY['Oranges'],
@@ -58,6 +69,7 @@ CREATE TABLE IF NOT EXISTS shipments (
   value NUMERIC(12, 2) NOT NULL,
   currency VARCHAR(10) NOT NULL DEFAULT 'INR',
   status VARCHAR(50) NOT NULL DEFAULT 'REQUESTED',
+  is_demo BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

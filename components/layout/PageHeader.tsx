@@ -32,7 +32,7 @@ export function PageHeader({
       {breadcrumbs.length > 0 && (
         <nav aria-label="Breadcrumbs" className="flex items-center gap-1.5 text-xs text-neutral-500">
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center gap-1 hover:text-brand-600 transition-colors"
           >
             <Home className="w-3.5 h-3.5" />

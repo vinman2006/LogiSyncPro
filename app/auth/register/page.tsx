@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
+import { getAuthErrorMessage } from '@/lib/firebase/auth';
 import { LogoIcon } from '@/components/ui/Logo';
 
 export default function RegisterPage() {
@@ -33,7 +34,7 @@ export default function RegisterPage() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loading && user) router.replace('/');
+    if (!loading && user) router.replace('/dashboard');
   }, [user, loading, router]);
 
   useEffect(() => {
@@ -53,10 +54,9 @@ export default function RegisterPage() {
     setError('');
     try {
       await signInWithGoogle();
-      router.replace('/');
+      router.replace('/dashboard');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Google sign-in failed';
-      setError(message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim());
+      setError(getAuthErrorMessage(err));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -78,15 +78,7 @@ export default function RegisterPage() {
       await registerWithEmail(email, password, displayName);
       router.replace('/onboarding');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
-      const cleaned = message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim();
-      if (cleaned.includes('email-already-in-use')) {
-        setError('This email is already registered. Try signing in.');
-      } else if (cleaned.includes('weak-password')) {
-        setError('Password is too weak. Use at least 8 characters.');
-      } else {
-        setError(cleaned || 'An error occurred. Please try again.');
-      }
+      setError(getAuthErrorMessage(err));
       gsap.fromTo(cardRef.current, { x: -8 }, { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' });
     } finally {
       setIsSubmitting(false);
@@ -109,7 +101,7 @@ export default function RegisterPage() {
 
       <div ref={cardRef} className="w-full max-w-md relative z-10">
         <div className="auth-logo text-center mb-8">
-          <Link href="/landing" className="inline-flex flex-col items-center group">
+          <Link href="/" className="inline-flex flex-col items-center group">
             <LogoIcon size={56} className="mb-3 group-hover:scale-105 transition-transform duration-200 shadow-xl shadow-brand-600/30" />
             <div className="flex items-center gap-2">
               <span className="font-heading text-xl font-bold text-white tracking-tight">LogiSync</span>

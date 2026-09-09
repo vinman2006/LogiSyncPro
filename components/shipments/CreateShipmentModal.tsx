@@ -4,15 +4,12 @@ import React, { useState, useEffect } from 'react';
 import {
   PackagePlus,
   Send,
-  MapPin,
-  Scale,
-  Calendar,
-  IndianRupee,
   Building2,
   AlertCircle,
 } from 'lucide-react';
 import { NodeEntity } from '@/lib/db/repo';
 import { useNetwork } from '@/lib/context/NetworkContext';
+import { useAuth } from '@/lib/context/AuthContext';
 
 interface CreateShipmentModalProps {
   isOpen: boolean;
@@ -28,6 +25,8 @@ export function CreateShipmentModal({
   preselectedCollectorId,
 }: CreateShipmentModalProps) {
   const { currentNode, refreshShipments } = useNetwork();
+  const { userName } = useAuth();
+  const initiatorName = userName || 'Vineet';
 
   const [collectors, setCollectors] = useState<NodeEntity[]>([]);
   const [collectorId, setCollectorId] = useState(preselectedCollectorId || '');
@@ -114,9 +113,14 @@ export function CreateShipmentModal({
             <PackagePlus className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-foreground">Create & Dispatch Consignment</h2>
-            <p className="text-xs text-muted-foreground">
-              Initiate a verified supply chain transaction request to a destination node
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-foreground">Create & Dispatch Consignment</h2>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20">
+                Initiated by {initiatorName}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Initiate a verified supply chain transaction from {currentNode?.name || `${initiatorName} Fresh Logistics`}
             </p>
           </div>
         </div>

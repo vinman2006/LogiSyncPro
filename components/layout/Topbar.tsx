@@ -19,7 +19,8 @@ import { useLogistics } from '@/lib/context/LogisticsContext';
 import { useNetwork } from '@/lib/context/NetworkContext';
 import { MOCK_DATA_HUBS } from '@/lib/mock-data/dashboard';
 import { UserRole } from '@/lib/mock-data/types';
-import { Truck, Package, Sprout, Sparkles } from 'lucide-react';
+import { Truck, Package, Sprout, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/context/AuthContext';
 
 interface TopbarProps {
   onOpenMobileMenu: () => void;
@@ -38,7 +39,6 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
     selectedHub,
     changeHub,
     user,
-    switchUserRole,
     alerts,
     unreadAlertsCount,
     markAlertAsRead,
@@ -52,6 +52,12 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
     unreadCount,
     markAllNotificationsRead,
   } = useNetwork();
+
+  const { userName, user: authUser, userNode, signOut } = useAuth();
+  const displayName = userName || authUser?.displayName || user.name || 'Vineet';
+  const displayRole = currentNode?.role || userNode?.role || user.role || 'DISTRIBUTOR';
+  const displayBusiness = currentNode?.name || userNode?.name || user.companyName || `${displayName} Fresh Logistics`;
+  const avatarLetter = (displayName.charAt(0) || 'V').toUpperCase();
 
   const [hubDropdownOpen, setHubDropdownOpen] = useState(false);
   const [alertDropdownOpen, setAlertDropdownOpen] = useState(false);
@@ -320,24 +326,24 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
             title="User Profile & Role Permissions"
           >
             <div className="w-8 h-8 rounded-full bg-brand-50 border border-brand-500/20 text-brand-600 flex items-center justify-center text-xs font-bold shadow-xs">
-              {user.avatarInitials}
+              {avatarLetter}
             </div>
 
             <div className="hidden xl:flex flex-col text-left">
               <span className="text-xs font-medium text-neutral-900 leading-tight">
-                {user.name}
+                {displayName}
               </span>
-              <span className="text-[10px] text-neutral-500 leading-tight">
-                {user.companyName}
+              <span className="text-[10px] text-neutral-500 leading-tight truncate max-w-[140px]">
+                {displayBusiness}
               </span>
             </div>
 
             {/* Role Pill */}
             <span
-              className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800"
-              title={`Active Role: ${user.role} (Click to switch)`}
+              className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-300 bg-neutral-100 text-neutral-800 uppercase tracking-wider"
+              title={`Active Role: ${displayRole}`}
             >
-              {user.role}
+              {displayRole}
             </span>
           </button>
 
@@ -347,10 +353,10 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
               onMouseLeave={() => setUserMenuOpen(false)}
             >
               <div className="px-3 py-2 border-b border-neutral-100">
-                <div className="text-xs font-bold text-neutral-900">{user.name}</div>
-                <div className="text-[11px] text-neutral-500">{user.email}</div>
+                <div className="text-xs font-bold text-neutral-900">{displayName}</div>
+                <div className="text-[11px] text-neutral-500">{authUser?.email || user.email}</div>
                 <div className="text-[10px] text-neutral-400 font-medium mt-0.5 truncate">
-                  {user.companyName}
+                  {displayBusiness}
                 </div>
               </div>
 
@@ -360,14 +366,15 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
                 </div>
 
                 {ROLES.map(({ role, icon: RoleIcon, description }) => {
-                  const isCurrent = user.role === role;
+                  const isCurrent = (currentNode?.role || user.role) === role.toUpperCase();
 
                   return (
                     <button
                       key={role}
                       type="button"
                       onClick={() => {
-                        switchUserRole(role);
+                        const targetRole = role === 'Admin' || role === 'Manager' ? 'DISTRIBUTOR' : role === 'Staff' ? 'COLLECTOR' : 'FARMER';
+                        switchDemoRole(targetRole);
                         setUserMenuOpen(false);
                       }}
                       className={cn(
@@ -393,7 +400,7 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
                 })}
               </div>
 
-              <div className="pt-2 border-t border-neutral-100">
+              <div className="pt-2 border-t border-neutral-100 space-y-1">
                 <Link
                   href="/settings"
                   onClick={() => setUserMenuOpen(false)}
@@ -401,6 +408,18 @@ export function Topbar({ onOpenMobileMenu, pageTitle }: TopbarProps) {
                 >
                   Organization Settings & RBAC
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setUserMenuOpen(false);
+                    await signOut();
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
               </div>
             </div>
           )}

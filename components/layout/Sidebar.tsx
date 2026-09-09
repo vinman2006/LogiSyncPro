@@ -43,7 +43,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         label: 'Dashboard',
-        href: '/',
+        href: '/dashboard',
         icon: LayoutDashboard,
       },
     ],
@@ -173,7 +173,7 @@ export function Sidebar({
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border shrink-0 bg-white">
           <Link
-            href="/"
+            href="/dashboard"
             className={cn(
               'flex items-center gap-2.5 overflow-hidden transition-all',
               isCollapsed && 'justify-center w-full px-0'
@@ -228,8 +228,8 @@ export function Sidebar({
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const isActive =
-                    item.href === '/'
-                      ? pathname === '/'
+                    item.href === '/dashboard'
+                      ? pathname === '/dashboard'
                       : pathname.startsWith(item.href);
 
                   return (

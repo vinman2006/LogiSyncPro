@@ -4,7 +4,21 @@ export interface UserEntity {
   id: string;
   firebase_uid: string;
   email: string;
+  name: string;
   display_name: string;
+  created_at: string;
+}
+
+export interface BusinessEntity {
+  id: string;
+  user_id: string;
+  business_name: string;
+  country: string;
+  country_code: string;
+  region: string;
+  region_code: string;
+  role: 'FARMER' | 'DISTRIBUTOR' | 'COLLECTOR';
+  status: string;
   created_at: string;
 }
 
@@ -14,9 +28,11 @@ export interface NodeEntity {
   owner_id?: string;
   node_code: string;
   name: string;
+  node_type?: string;
   role: 'FARMER' | 'DISTRIBUTOR' | 'COLLECTOR';
   country: string;
   city: string;
+  region?: string;
   status: string;
   commodities_handled: string[];
   created_at: string;
@@ -48,6 +64,8 @@ export interface ShipmentEntity {
     | 'COMPLETED'
     | 'REJECTED'
     | 'CANCELLED';
+  is_demo?: boolean;
+  demo_user_id?: string;
   created_at: string;
   updated_at: string;
   distributor_name?: string;
@@ -82,21 +100,37 @@ export interface PaymentEntity {
   verified_at?: string;
 }
 
+import { resolveUserName } from '@/lib/utils/userName';
+export { resolveUserName };
+
 // ----------------------------------------------------
 // USER & ONBOARDING OPERATIONS
 // ----------------------------------------------------
 
 export async function syncUser(firebaseUid: string, email: string, displayName?: string) {
+  const resolvedName = resolveUserName(displayName, email);
+
   if (isNeonConfigured) {
     const existing = await executeQuery<UserEntity>(
       'SELECT * FROM users WHERE firebase_uid = $1 LIMIT 1',
       [firebaseUid]
     );
-    if (existing.length > 0) return existing[0];
+    if (existing.length > 0) {
+      // If user exists but name was generic, update it
+      if (existing[0].display_name === 'User' || !existing[0].display_name) {
+        await executeQuery('UPDATE users SET display_name = $1, name = $1 WHERE id = $2', [
+          resolvedName,
+          existing[0].id,
+        ]);
+        existing[0].display_name = resolvedName;
+        existing[0].name = resolvedName;
+      }
+      return existing[0];
+    }
 
     const inserted = await executeQuery<UserEntity>(
-      'INSERT INTO users (firebase_uid, email, display_name) VALUES ($1, $2, $3) RETURNING *',
-      [firebaseUid, email, displayName || email.split('@')[0]]
+      'INSERT INTO users (firebase_uid, email, display_name, name) VALUES ($1, $2, $3, $3) RETURNING *',
+      [firebaseUid, email, resolvedName]
     );
     return inserted[0];
   }
@@ -109,10 +143,14 @@ export async function syncUser(firebaseUid: string, email: string, displayName?:
       id: `usr-${Date.now().toString(36)}`,
       firebase_uid: firebaseUid,
       email,
-      display_name: displayName || email.split('@')[0],
+      name: resolvedName,
+      display_name: resolvedName,
       created_at: new Date().toISOString(),
     };
     store.users.push(user);
+  } else if (!user.display_name || user.display_name === 'User') {
+    user.display_name = resolvedName;
+    user.name = resolvedName;
   }
   return user;
 }
@@ -120,14 +158,17 @@ export async function syncUser(firebaseUid: string, email: string, displayName?:
 export async function completeOnboarding(params: {
   firebaseUid: string;
   email: string;
+  displayName?: string;
   country: string;
   countryCode: string;
+  region: string;
+  regionCode: string;
   role: 'FARMER' | 'DISTRIBUTOR' | 'COLLECTOR';
   businessName: string;
   city: string;
   phone?: string;
 }) {
-  const user = await syncUser(params.firebaseUid, params.email);
+  const user = await syncUser(params.firebaseUid, params.email, params.displayName);
 
   if (isNeonConfigured) {
     // 1. Save profile
@@ -139,17 +180,26 @@ export async function completeOnboarding(params: {
 
     // 2. Save business
     const bizRows = await executeQuery<{ id: string }>(
-      `INSERT INTO businesses (owner_id, name, business_type, country, city, status)
-       VALUES ($1, $2, $3, $4, $5, 'VERIFIED') RETURNING id`,
-      [user.id, params.businessName, params.role, params.country, params.city]
+      `INSERT INTO businesses (user_id, owner_id, business_name, name, business_type, role, country, country_code, region, region_code, city, status)
+       VALUES ($1, $1, $2, $2, $3, $3, $4, $5, $6, $7, $8, 'VERIFIED') RETURNING id`,
+      [
+        user.id,
+        params.businessName,
+        params.role,
+        params.country,
+        params.countryCode,
+        params.region,
+        params.regionCode,
+        params.city,
+      ]
     );
     const businessId = bizRows[0].id;
 
     // 3. Create active Node
-    const nodeCode = `NODE-${params.role.substring(0, 4)}-${params.city.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+    const nodeCode = `NODE-${params.role.substring(0, 4)}-${(params.city || params.region).substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
     const nodeRows = await executeQuery<NodeEntity>(
-      `INSERT INTO nodes (business_id, owner_id, node_code, name, role, country, city, status, commodities_handled)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'ACTIVE', $8) RETURNING *`,
+      `INSERT INTO nodes (business_id, owner_id, node_code, name, node_type, role, country, city, region, status, commodities_handled)
+       VALUES ($1, $2, $3, $4, $5, $5, $6, $7, $8, 'ACTIVE', $9) RETURNING *`,
       [
         businessId,
         user.id,
@@ -158,7 +208,8 @@ export async function completeOnboarding(params: {
         params.role,
         params.country,
         params.city,
-        ['Oranges', 'Citrus', 'Fruits'],
+        params.region,
+        ['Oranges', 'Citrus', 'Agri-Produce'],
       ]
     );
 
@@ -172,6 +223,8 @@ export async function completeOnboarding(params: {
     user_id: user.id,
     country: params.country,
     country_code: params.countryCode,
+    region: params.region,
+    region_code: params.regionCode,
     city: params.city,
     phone: params.phone,
     created_at: new Date().toISOString(),
@@ -180,10 +233,16 @@ export async function completeOnboarding(params: {
 
   const business = {
     id: `biz-${Date.now().toString(36)}`,
+    user_id: user.id,
     owner_id: user.id,
+    business_name: params.businessName,
     name: params.businessName,
     business_type: params.role,
+    role: params.role,
     country: params.country,
+    country_code: params.countryCode,
+    region: params.region,
+    region_code: params.regionCode,
     city: params.city,
     status: 'VERIFIED',
     created_at: new Date().toISOString(),
@@ -194,18 +253,217 @@ export async function completeOnboarding(params: {
     id: `node-${Date.now().toString(36)}`,
     business_id: business.id,
     owner_id: user.id,
-    node_code: `NODE-${params.role.substring(0, 4)}-${params.city.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
+    node_code: `NODE-${params.role.substring(0, 4)}-${(params.city || params.region).substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
     name: params.businessName,
+    node_type: params.role,
     role: params.role,
     country: params.country,
     city: params.city,
+    region: params.region,
     status: 'ACTIVE',
-    commodities_handled: ['Oranges', 'Citrus', 'Fruits'],
+    commodities_handled: ['Oranges', 'Citrus', 'Agri-Produce'],
     created_at: new Date().toISOString(),
   };
   store.nodes.push(node);
 
   return { user, node };
+}
+
+// ----------------------------------------------------
+// DEMO INITIALIZATION (IDEMPOTENT ORANGE SUPPLY CHAIN)
+// ----------------------------------------------------
+
+export async function initializeOrangeDemo(params: { firebaseUid: string }) {
+  const user = await syncUser(params.firebaseUid, 'user@logisync.com');
+  const userNode = await getUserNode(params.firebaseUid);
+
+  if (!userNode) {
+    throw new Error('Please complete onboarding before initializing demo.');
+  }
+
+  // 1. Check idempotency: does this user/node already have an active demo shipment?
+  const store = getFallbackStore();
+  let existingDemo: ShipmentEntity | undefined;
+
+  if (isNeonConfigured) {
+    const existingRows = await executeQuery<ShipmentEntity>(
+      `SELECT * FROM shipments 
+       WHERE is_demo = TRUE AND (distributor_node_id = $1 OR collector_node_id = $1 OR farmer_node_id = $1)
+       ORDER BY created_at DESC LIMIT 1`,
+      [userNode.id]
+    );
+    if (existingRows.length > 0) existingDemo = existingRows[0];
+  } else {
+    existingDemo = store.shipments.find(
+      (s) =>
+        s.is_demo === true &&
+        (s.distributor_node_id === userNode.id ||
+          s.collector_node_id === userNode.id ||
+          s.farmer_node_id === userNode.id ||
+          s.demo_user_id === user.id)
+    ) as ShipmentEntity | undefined;
+  }
+
+  if (existingDemo) {
+    return {
+      success: true,
+      alreadyInitialized: true,
+      shipment: existingDemo,
+      message: 'Demo already initialized.',
+    };
+  }
+
+  // 2. Ensure supporting supply chain counterpart nodes exist
+  const allNodes = await listAllNodes();
+  const defaultFarmer =
+    allNodes.find((n) => n.role === 'FARMER' && n.id !== userNode.id) || allNodes[0];
+  const defaultDistributor =
+    allNodes.find((n) => n.role === 'DISTRIBUTOR' && n.id !== userNode.id) || allNodes[0];
+  const defaultCollector =
+    allNodes.find((n) => n.role === 'COLLECTOR' && n.id !== userNode.id) || allNodes[0];
+
+  let distributorId: string;
+  let collectorId: string;
+  let farmerId: string;
+  let initialStatus: ShipmentEntity['status'];
+
+  if (userNode.role === 'DISTRIBUTOR') {
+    distributorId = userNode.id;
+    collectorId = defaultCollector.id;
+    farmerId = defaultFarmer.id;
+    initialStatus = 'ACCEPTED'; // Ready for distributor to dispatch!
+  } else if (userNode.role === 'COLLECTOR') {
+    distributorId = defaultDistributor.id;
+    collectorId = userNode.id;
+    farmerId = defaultFarmer.id;
+    initialStatus = 'REQUESTED'; // Waiting for collector to accept!
+  } else {
+    // Farmer
+    distributorId = defaultDistributor.id;
+    collectorId = defaultCollector.id;
+    farmerId = userNode.id;
+    initialStatus = 'REQUESTED';
+  }
+
+  const readableId = generateReadableShipmentId();
+
+  if (isNeonConfigured) {
+    const inserted = await executeQuery<ShipmentEntity>(
+      `INSERT INTO shipments (
+        readable_id, distributor_node_id, collector_node_id, farmer_node_id,
+        commodity, expected_quantity, unit, origin, destination, value, currency, status, is_demo
+      ) VALUES ($1, $2, $3, $4, 'Oranges', 1000, 'kg', 'Maharashtra', 'Pune', 50000, 'INR', $5, TRUE)
+      RETURNING *`,
+      [readableId, distributorId, collectorId, farmerId, initialStatus]
+    );
+
+    const shp = inserted[0];
+
+    // Record creation event
+    await executeQuery(
+      `INSERT INTO shipment_events (shipment_id, event_type, actor_id, location, metadata)
+       VALUES ($1, 'SHIPMENT_CREATED', $2, 'Maharashtra', $3)`,
+      [shp.id, user.id, JSON.stringify({ commodity: 'Oranges', quantity: 1000, is_demo: true })]
+    );
+
+    await executeQuery(
+      `INSERT INTO shipment_events (shipment_id, event_type, actor_id, location, metadata)
+       VALUES ($1, 'COLLECTOR_REQUESTED', $2, 'Pune', $3)`,
+      [shp.id, user.id, JSON.stringify({ requested_node_id: collectorId })]
+    );
+
+    if (initialStatus === 'ACCEPTED') {
+      await executeQuery(
+        `INSERT INTO shipment_events (shipment_id, event_type, actor_id, location, metadata)
+         VALUES ($1, 'COLLECTOR_ACCEPTED', $2, 'Pune', $3)`,
+        [shp.id, user.id, JSON.stringify({ note: 'Pre-accepted demo shipment' })]
+      );
+    }
+
+    return {
+      success: true,
+      alreadyInitialized: false,
+      shipment: shp,
+      message: 'Your Orange Logistics Demo is Ready',
+    };
+  }
+
+  // Fallback in-memory store
+  const newDemoShipment: ShipmentEntity = {
+    id: `shp-demo-${Date.now().toString(36)}`,
+    readable_id: readableId,
+    distributor_node_id: distributorId,
+    collector_node_id: collectorId,
+    farmer_node_id: farmerId,
+    commodity: 'Oranges',
+    expected_quantity: 1000,
+    unit: 'kg',
+    origin: 'Maharashtra',
+    destination: 'Pune',
+    value: 50000,
+    currency: 'INR',
+    status: initialStatus,
+    is_demo: true,
+    demo_user_id: user.id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  store.shipments.unshift(newDemoShipment);
+
+  store.shipment_events.push({
+    id: `evt-demo-1-${Date.now().toString(36)}`,
+    shipment_id: newDemoShipment.id,
+    event_type: 'SHIPMENT_CREATED',
+    actor_id: user.id,
+    location: 'Maharashtra',
+    metadata: { commodity: 'Oranges', quantity: 1000, is_demo: true },
+    created_at: new Date().toISOString(),
+  });
+
+  store.shipment_events.push({
+    id: `evt-demo-2-${Date.now().toString(36)}`,
+    shipment_id: newDemoShipment.id,
+    event_type: 'COLLECTOR_REQUESTED',
+    actor_id: user.id,
+    location: 'Pune',
+    metadata: { requested_node_id: collectorId },
+    created_at: new Date().toISOString(),
+  });
+
+  if (initialStatus === 'ACCEPTED') {
+    store.shipment_events.push({
+      id: `evt-demo-3-${Date.now().toString(36)}`,
+      shipment_id: newDemoShipment.id,
+      event_type: 'COLLECTOR_ACCEPTED',
+      actor_id: user.id,
+      location: 'Pune',
+      metadata: { note: 'Pre-accepted demo shipment' },
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  // Add notification
+  store.notifications.unshift({
+    id: `notif-demo-${Date.now().toString(36)}`,
+    type: userNode.role === 'COLLECTOR' ? 'SHIPMENT_REQUESTED' : 'DEMO_READY',
+    title: userNode.role === 'COLLECTOR' ? 'Incoming Orange Shipment' : 'Orange Logistics Demo Initialized',
+    message:
+      userNode.role === 'COLLECTOR'
+        ? 'Incoming shipment request from Pune Fresh Logistics: 1,000 kg Oranges (Maharashtra → Pune).'
+        : 'Your Orange supply chain demo is initialized and ready on your dashboard.',
+    entity_type: 'SHIPMENT',
+    entity_id: readableId,
+    read: false,
+    created_at: new Date().toISOString(),
+  });
+
+  return {
+    success: true,
+    alreadyInitialized: false,
+    shipment: newDemoShipment,
+    message: 'Your Orange Logistics Demo is Ready',
+  };
 }
 
 export async function getUserNode(firebaseUid?: string): Promise<NodeEntity | null> {
@@ -299,8 +557,8 @@ export async function createShipment(data: {
     const rows = await executeQuery<ShipmentEntity>(
       `INSERT INTO shipments (
         readable_id, distributor_node_id, collector_node_id, farmer_node_id,
-        commodity, expected_quantity, unit, origin, destination, value, currency, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'REQUESTED')
+        commodity, expected_quantity, unit, origin, destination, value, currency, status, is_demo
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'REQUESTED', FALSE)
       RETURNING *`,
       [
         readableId,
@@ -358,6 +616,7 @@ export async function createShipment(data: {
     value: data.value,
     currency,
     status: 'REQUESTED',
+    is_demo: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };

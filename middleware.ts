@@ -2,7 +2,23 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Protected paths requiring authentication
-const PROTECTED_PATHS = ['/'];
+const PROTECTED_PATHS = [
+  '/dashboard',
+  '/shipments',
+  '/fleet',
+  '/delivery',
+  '/warehouse',
+  '/alerts',
+  '/live-map',
+  '/route-ai',
+  '/forecasting',
+  '/blockchain',
+  '/settings',
+  '/network',
+  '/driver-analytics',
+  '/supply-chain',
+  '/onboarding',
+];
 const AUTH_PATHS = ['/auth/login', '/auth/register'];
 
 export function middleware(request: NextRequest) {
@@ -14,7 +30,7 @@ export function middleware(request: NextRequest) {
 
   // Redirect unauthenticated users from protected routes to login
   const isProtected = PROTECTED_PATHS.some(
-    (p) => pathname === p || pathname.startsWith('/(dashboard)')
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
 
   if (isProtected && !isAuthenticated) {
@@ -23,9 +39,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect already authenticated users away from auth pages
+  // Redirect already authenticated users away from auth pages to dashboard
   if (AUTH_PATHS.includes(pathname) && isAuthenticated) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();

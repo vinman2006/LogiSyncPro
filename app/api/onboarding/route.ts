@@ -9,17 +9,20 @@ export async function POST(req: NextRequest) {
     const {
       firebaseUid,
       email,
+      displayName,
       country,
       countryCode,
+      region,
+      regionCode,
       role,
       businessName,
       city,
       phone,
     } = body;
 
-    if (!firebaseUid || !country || !role || !businessName || !city) {
+    if (!firebaseUid || !country || !role || !businessName) {
       return NextResponse.json(
-        { success: false, error: 'All fields (country, role, businessName, city) are required' },
+        { success: false, error: 'Country, Role, and Business Name are required' },
         { status: 400 }
       );
     }
@@ -27,11 +30,14 @@ export async function POST(req: NextRequest) {
     const result = await completeOnboarding({
       firebaseUid,
       email: email || 'user@logisync.com',
+      displayName,
       country,
       countryCode: countryCode || 'IN',
+      region: region || city || 'Maharashtra',
+      regionCode: regionCode || 'MH',
       role,
       businessName,
-      city,
+      city: city || region || 'Pune',
       phone,
     });
 

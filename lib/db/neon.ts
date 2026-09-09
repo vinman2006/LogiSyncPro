@@ -11,10 +11,10 @@ export const isNeonConfigured = Boolean(
 
 // Fallback in-memory data store when DATABASE_URL is not supplied
 export interface MockStore {
-  users: Array<{ id: string; firebase_uid: string; email: string; display_name: string; created_at: string }>;
-  user_profiles: Array<{ id: string; user_id: string; country: string; country_code: string; city: string; phone?: string; created_at: string }>;
-  businesses: Array<{ id: string; owner_id?: string; name: string; business_type: string; country: string; city: string; status: string; created_at: string }>;
-  nodes: Array<{ id: string; business_id: string; owner_id?: string; node_code: string; name: string; role: string; country: string; city: string; status: string; commodities_handled: string[]; created_at: string }>;
+  users: Array<{ id: string; firebase_uid: string; email: string; name: string; display_name: string; created_at: string }>;
+  user_profiles: Array<{ id: string; user_id: string; country: string; country_code: string; region?: string; region_code?: string; city: string; phone?: string; created_at: string }>;
+  businesses: Array<{ id: string; user_id?: string; owner_id?: string; business_name: string; name: string; business_type: string; role: string; country: string; country_code: string; region: string; region_code: string; city: string; status: string; created_at: string }>;
+  nodes: Array<{ id: string; business_id: string; owner_id?: string; node_code: string; name: string; node_type?: string; role: string; country: string; city: string; region?: string; status: string; commodities_handled: string[]; created_at: string }>;
   shipments: Array<{
     id: string;
     readable_id: string;
@@ -30,6 +30,8 @@ export interface MockStore {
     value: number;
     currency: string;
     status: string;
+    is_demo?: boolean;
+    demo_user_id?: string;
     created_at: string;
     updated_at: string;
   }>;
@@ -73,19 +75,19 @@ function createInitialStore(): MockStore {
 
   return {
     users: [
-      { id: 'usr-farmer-01', firebase_uid: 'demo-farmer-uid', email: 'farmer@logisync.com', display_name: 'Rajesh Patil (Farmer)', created_at: new Date().toISOString() },
-      { id: 'usr-dist-01', firebase_uid: 'demo-distributor-uid', email: 'distributor@logisync.com', display_name: 'Pune Fresh Logistics Admin', created_at: new Date().toISOString() },
-      { id: 'usr-coll-01', firebase_uid: 'demo-collector-uid', email: 'collector@logisync.com', display_name: 'Pune Produce Collector Desk', created_at: new Date().toISOString() },
+      { id: 'usr-farmer-01', firebase_uid: 'demo-farmer-uid', email: 'farmer@logisync.com', name: 'Rajesh Patil', display_name: 'Rajesh Patil (Farmer)', created_at: new Date().toISOString() },
+      { id: 'usr-dist-01', firebase_uid: 'demo-distributor-uid', email: 'distributor@logisync.com', name: 'Pune Logistics Admin', display_name: 'Pune Fresh Logistics Admin', created_at: new Date().toISOString() },
+      { id: 'usr-coll-01', firebase_uid: 'demo-collector-uid', email: 'collector@logisync.com', name: 'Pune Collector Desk', display_name: 'Pune Produce Collector Desk', created_at: new Date().toISOString() },
     ],
     user_profiles: [
-      { id: 'prof-1', user_id: 'usr-farmer-01', country: 'India', country_code: 'IN', city: 'Nashik', created_at: new Date().toISOString() },
-      { id: 'prof-2', user_id: 'usr-dist-01', country: 'India', country_code: 'IN', city: 'Pune', created_at: new Date().toISOString() },
-      { id: 'prof-3', user_id: 'usr-coll-01', country: 'India', country_code: 'IN', city: 'Pune', created_at: new Date().toISOString() },
+      { id: 'prof-1', user_id: 'usr-farmer-01', country: 'India', country_code: 'IN', region: 'Maharashtra', region_code: 'MH', city: 'Nashik', created_at: new Date().toISOString() },
+      { id: 'prof-2', user_id: 'usr-dist-01', country: 'India', country_code: 'IN', region: 'Maharashtra', region_code: 'MH', city: 'Pune', created_at: new Date().toISOString() },
+      { id: 'prof-3', user_id: 'usr-coll-01', country: 'India', country_code: 'IN', region: 'Maharashtra', region_code: 'MH', city: 'Pune', created_at: new Date().toISOString() },
     ],
     businesses: [
-      { id: farmerBizId, owner_id: 'usr-farmer-01', name: 'Maharashtra Orange Farm', business_type: 'FARMER', country: 'India', city: 'Nashik', status: 'VERIFIED', created_at: new Date().toISOString() },
-      { id: distributorBizId, owner_id: 'usr-dist-01', name: 'Pune Fresh Logistics', business_type: 'DISTRIBUTOR', country: 'India', city: 'Pune', status: 'VERIFIED', created_at: new Date().toISOString() },
-      { id: collectorBizId, owner_id: 'usr-coll-01', name: 'Pune City Produce Collector', business_type: 'COLLECTOR', country: 'India', city: 'Pune', status: 'VERIFIED', created_at: new Date().toISOString() },
+      { id: farmerBizId, user_id: 'usr-farmer-01', owner_id: 'usr-farmer-01', business_name: 'Maharashtra Orange Farm', name: 'Maharashtra Orange Farm', business_type: 'FARMER', role: 'FARMER', country: 'India', country_code: 'IN', region: 'Maharashtra', region_code: 'MH', city: 'Nashik', status: 'VERIFIED', created_at: new Date().toISOString() },
+      { id: distributorBizId, user_id: 'usr-dist-01', owner_id: 'usr-dist-01', business_name: 'Pune Fresh Logistics', name: 'Pune Fresh Logistics', business_type: 'DISTRIBUTOR', role: 'DISTRIBUTOR', country: 'India', country_code: 'IN', region: 'Maharashtra', region_code: 'MH', city: 'Pune', status: 'VERIFIED', created_at: new Date().toISOString() },
+      { id: collectorBizId, user_id: 'usr-coll-01', owner_id: 'usr-coll-01', business_name: 'Pune City Produce Collector', name: 'Pune City Produce Collector', business_type: 'COLLECTOR', role: 'COLLECTOR', country: 'India', country_code: 'IN', region: 'Maharashtra', region_code: 'MH', city: 'Pune', status: 'VERIFIED', created_at: new Date().toISOString() },
     ],
     nodes: [
       {
@@ -94,9 +96,11 @@ function createInitialStore(): MockStore {
         owner_id: 'usr-farmer-01',
         node_code: 'NODE-FARM-NSK',
         name: 'Maharashtra Orange Farm (Nashik)',
+        node_type: 'FARMER',
         role: 'FARMER',
         country: 'India',
         city: 'Nashik',
+        region: 'Maharashtra',
         status: 'VERIFIED',
         commodities_handled: ['Oranges', 'Grapes', 'Pomegranates'],
         created_at: new Date().toISOString(),
@@ -107,9 +111,11 @@ function createInitialStore(): MockStore {
         owner_id: 'usr-dist-01',
         node_code: 'NODE-DIST-PUN',
         name: 'Pune Fresh Logistics Hub',
+        node_type: 'DISTRIBUTOR',
         role: 'DISTRIBUTOR',
         country: 'India',
         city: 'Pune',
+        region: 'Maharashtra',
         status: 'VERIFIED',
         commodities_handled: ['Oranges', 'Vegetables', 'Fruits', 'Agri-Produce'],
         created_at: new Date().toISOString(),
@@ -120,9 +126,11 @@ function createInitialStore(): MockStore {
         owner_id: 'usr-coll-01',
         node_code: 'NODE-COLL-PUN',
         name: 'Pune City Produce Collector (Market Yard)',
+        node_type: 'COLLECTOR',
         role: 'COLLECTOR',
         country: 'India',
         city: 'Pune',
+        region: 'Maharashtra',
         status: 'VERIFIED',
         commodities_handled: ['Oranges', 'Citrus', 'Fruits', 'Perishables'],
         created_at: new Date().toISOString(),
@@ -139,11 +147,12 @@ function createInitialStore(): MockStore {
         expected_quantity: 1000,
         received_quantity: 980,
         unit: 'kg',
-        origin: 'Nashik, Maharashtra',
-        destination: 'Market Yard, Pune, Maharashtra',
+        origin: 'Maharashtra',
+        destination: 'Pune',
         value: 50000,
         currency: 'INR',
         status: 'ACCEPTED',
+        is_demo: true,
         created_at: new Date(Date.now() - 3600000).toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -240,6 +249,7 @@ export async function initializeNeonDatabase(): Promise<{ success: boolean; mess
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         firebase_uid VARCHAR(128) UNIQUE NOT NULL,
         email VARCHAR(255) NOT NULL,
+        name VARCHAR(255),
         display_name VARCHAR(255),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -251,6 +261,8 @@ export async function initializeNeonDatabase(): Promise<{ success: boolean; mess
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
         country VARCHAR(100) NOT NULL,
         country_code VARCHAR(10) NOT NULL,
+        region VARCHAR(100),
+        region_code VARCHAR(10),
         city VARCHAR(100),
         phone VARCHAR(50),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -260,10 +272,16 @@ export async function initializeNeonDatabase(): Promise<{ success: boolean; mess
     await sql`
       CREATE TABLE IF NOT EXISTS businesses (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
         owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        business_name VARCHAR(255),
         name VARCHAR(255) NOT NULL,
         business_type VARCHAR(50) NOT NULL,
+        role VARCHAR(50),
         country VARCHAR(100) NOT NULL,
+        country_code VARCHAR(10),
+        region VARCHAR(100),
+        region_code VARCHAR(10),
         city VARCHAR(100) NOT NULL,
         status VARCHAR(50) DEFAULT 'VERIFIED',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -277,8 +295,10 @@ export async function initializeNeonDatabase(): Promise<{ success: boolean; mess
         owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
         node_code VARCHAR(50) UNIQUE NOT NULL,
         name VARCHAR(255) NOT NULL,
+        node_type VARCHAR(50),
         role VARCHAR(50) NOT NULL,
         country VARCHAR(100) NOT NULL,
+        region VARCHAR(100),
         city VARCHAR(100) NOT NULL,
         status VARCHAR(50) DEFAULT 'ACTIVE',
         commodities_handled TEXT[] DEFAULT ARRAY['Oranges'],
@@ -302,10 +322,25 @@ export async function initializeNeonDatabase(): Promise<{ success: boolean; mess
         value NUMERIC(12, 2) NOT NULL,
         currency VARCHAR(10) NOT NULL DEFAULT 'INR',
         status VARCHAR(50) NOT NULL DEFAULT 'REQUESTED',
+        is_demo BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
     `;
+
+    // Resilient column migrations for existing databases
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(255);`;
+    await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS region VARCHAR(100);`;
+    await sql`ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS region_code VARCHAR(10);`;
+    await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;`;
+    await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS business_name VARCHAR(255);`;
+    await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS role VARCHAR(50);`;
+    await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS country_code VARCHAR(10);`;
+    await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS region VARCHAR(100);`;
+    await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS region_code VARCHAR(10);`;
+    await sql`ALTER TABLE nodes ADD COLUMN IF NOT EXISTS node_type VARCHAR(50);`;
+    await sql`ALTER TABLE nodes ADD COLUMN IF NOT EXISTS region VARCHAR(100);`;
+    await sql`ALTER TABLE shipments ADD COLUMN IF NOT EXISTS is_demo BOOLEAN DEFAULT FALSE;`;
 
     await sql`
       CREATE TABLE IF NOT EXISTS shipment_events (

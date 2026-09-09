@@ -4,34 +4,25 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Package,
-  Truck,
   Plus,
-  Send,
   ArrowRight,
   ArrowUpRight,
   CheckCircle2,
-  XCircle,
-  Clock,
-  MapPin,
   Building2,
-  Sparkles,
-  RotateCw,
-  Download,
   RefreshCw,
-  TrendingUp,
-  ShieldCheck,
 } from 'lucide-react';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { WeeklyVolumeChart } from '@/components/dashboard/WeeklyVolumeChart';
 import { LiveMapPreviewCard } from '@/components/dashboard/LiveMapPreviewCard';
 import { RecentAlertsFeed } from '@/components/dashboard/RecentAlertsFeed';
 import { DateRangeDropdown } from '@/components/dashboard/DateRangeDropdown';
-import { useLogistics } from '@/lib/context/LogisticsContext';
 import { useNetwork } from '@/lib/context/NetworkContext';
+import { useAuth } from '@/lib/context/AuthContext';
 import { CreateShipmentModal } from '@/components/shipments/CreateShipmentModal';
 
-export default function DashboardOverviewPage() {
-  const { isRefreshing, refreshTelemetry, exportCsvReport, lastRefreshedTime } = useLogistics();
+function DashboardOverviewContent() {
   const {
     currentNode,
     switchDemoRole,
@@ -39,6 +30,14 @@ export default function DashboardOverviewPage() {
     shipments,
     refreshShipments,
   } = useNetwork();
+  const { userName } = useAuth();
+  const searchParams = useSearchParams();
+  const isDemoReady = searchParams?.get('demo') === 'ready';
+  const greetingName = userName || 'Vineet';
+
+  // Find any active demo or orange consignment
+  const orangeShipment = shipments.find((s) => s.commodity === 'Oranges' || s.is_demo);
+  const showDemoBanner = isDemoReady || Boolean(orangeShipment);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -68,20 +67,19 @@ export default function DashboardOverviewPage() {
   };
 
   const incomingRequests = shipments.filter((s) => s.status === 'REQUESTED');
-  const inTransitShipments = shipments.filter((s) => s.status === 'IN_TRANSIT');
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Control Tower Header */}
+      {/* Control Tower Header with Persistent Name (Requirement 1 & 14) */}
       <PageHeader
-        title={
+        title={`Good morning, ${greetingName}`}
+        description={`${
           isCollector
             ? 'Collector Receiving Terminal'
             : isFarmer
             ? 'Producer Agricultural Hub'
             : 'Distributor Logistics Control Tower'
-        }
-        description={`One System. Every Move. • Active Node: ${currentNode?.name || 'Pune Fresh Logistics'} (${currentNode?.city || 'Pune'})`}
+        } • Active Node: ${currentNode?.name || `${greetingName} Fresh Logistics`} (${currentNode?.city || 'Pune'})`}
         breadcrumbs={[{ label: 'Overview' }]}
         showDemoBadge={true}
         actions={
@@ -130,6 +128,98 @@ export default function DashboardOverviewPage() {
           </>
         }
       />
+
+      {/* Personalized Orange Logistics Demo Banner (Requirements 8, 9, 10) */}
+      {showDemoBanner && (
+        <section aria-label="Orange Demo Banner" className="relative overflow-hidden rounded-2xl border-2 border-brand/40 bg-linear-to-r from-brand/10 via-amber-500/5 to-transparent p-5 sm:p-6 shadow-sm animate-in fade-in duration-300">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/20 text-brand text-xs font-bold border border-brand/30">
+                <span className="text-sm">🍊</span>
+                <span>ORANGE SUPPLY CHAIN DEMO</span>
+                <span className="bg-brand text-white text-[10px] px-1.5 py-0.5 rounded font-mono">LIVE IN NEON</span>
+              </div>
+
+              {isCollector ? (
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                    Incoming Orange Shipment
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    From: <strong className="text-foreground">{orangeShipment?.distributor_name || 'Pune Fresh Logistics'}</strong>
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                    Your Orange Logistics Demo is Ready
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    A verified supply chain transaction has been created in Neon. Follow the oranges from farmer to collector.
+                  </p>
+                </div>
+              )}
+
+              {/* Demo Specs Grid (Requirements 9 & 10) */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+                <div className="bg-card/80 backdrop-blur-xs border border-border rounded-xl p-3">
+                  <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Your Role</span>
+                  <span className="text-sm font-bold text-brand">{currentNode?.role || (isCollector ? 'Collector' : isFarmer ? 'Farmer' : 'Distributor')}</span>
+                </div>
+                <div className="bg-card/80 backdrop-blur-xs border border-border rounded-xl p-3">
+                  <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Commodity</span>
+                  <span className="text-sm font-bold text-foreground">Oranges</span>
+                </div>
+                <div className="bg-card/80 backdrop-blur-xs border border-border rounded-xl p-3">
+                  <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Quantity</span>
+                  <span className="text-sm font-bold text-foreground">1,000 kg</span>
+                </div>
+                <div className="bg-card/80 backdrop-blur-xs border border-border rounded-xl p-3">
+                  <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Origin</span>
+                  <span className="text-sm font-bold text-foreground">{orangeShipment?.origin || 'Maharashtra'}</span>
+                </div>
+                <div className="bg-card/80 backdrop-blur-xs border border-border rounded-xl p-3 col-span-2 sm:col-span-1">
+                  <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Destination</span>
+                  <span className="text-sm font-bold text-foreground">{orangeShipment?.destination || 'Pune'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action CTA */}
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0">
+              {isCollector && orangeShipment && orangeShipment.status === 'REQUESTED' ? (
+                <button
+                  type="button"
+                  disabled={processingId === orangeShipment.id}
+                  onClick={() => handleQuickAction(orangeShipment.id, 'accept')}
+                  className="px-6 py-3.5 rounded-xl bg-brand hover:opacity-95 text-brand-foreground text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {processingId === orangeShipment.id ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )}
+                  <span>Accept Shipment</span>
+                </button>
+              ) : (
+                <Link
+                  href={orangeShipment ? `/shipments/${orangeShipment.readable_id}` : '/shipments'}
+                  className="px-6 py-3.5 rounded-xl bg-brand hover:opacity-95 text-brand-foreground text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <span>{isDistributor ? 'Dispatch / Track Shipment' : 'Manage Consignment'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
+              <Link
+                href="/supply-chain"
+                className="px-4 py-2 rounded-xl border border-border bg-card/60 hover:bg-card text-xs font-semibold text-foreground text-center transition-colors"
+              >
+                View Network Topology
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Hero Operational Metrics (Requirement 28) */}
       <section aria-label="Logistics Metrics">
@@ -376,5 +466,13 @@ export default function DashboardOverviewPage() {
         onCreated={() => refreshShipments()}
       />
     </div>
+  );
+}
+
+export default function DashboardOverviewPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">Loading logistics control tower...</div>}>
+      <DashboardOverviewContent />
+    </Suspense>
   );
 }
