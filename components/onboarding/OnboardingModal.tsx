@@ -90,7 +90,7 @@ export function OnboardingModal({ isOpen, onComplete, onClose }: OnboardingModal
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-2xl border border-border bg-card p-6 md:p-8 shadow-2xl">
+      <div className="relative w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-6 md:p-8 shadow-2xl text-neutral-900">
         {/* Progress Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">

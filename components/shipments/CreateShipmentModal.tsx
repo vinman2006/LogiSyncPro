@@ -107,26 +107,26 @@ export function CreateShipmentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-2xl border border-border bg-card p-6 md:p-8 shadow-2xl">
+      <div className="relative w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-6 md:p-8 shadow-2xl text-neutral-900">
         <div className="flex items-center gap-3 mb-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 border border-brand-500/20">
             <PackagePlus className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-foreground">Create & Dispatch Consignment</h2>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20">
+              <h2 className="text-xl font-bold text-neutral-900">Create & Dispatch Consignment</h2>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 border border-brand-500/20">
                 Initiated by {initiatorName}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-neutral-500 mt-0.5">
               Initiate a verified supply chain transaction from {currentNode?.name || `${initiatorName} Fresh Logistics`}
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive flex items-center gap-2">
+          <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-600 flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -136,19 +136,19 @@ export function CreateShipmentModal({
           {/* Commodity & Quantity */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">Commodity / Produce</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Commodity / Produce</label>
               <input
                 type="text"
                 value={commodity}
                 onChange={(e) => setCommodity(e.target.value)}
                 placeholder="e.g. Oranges"
                 required
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">Quantity & Unit</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Quantity & Unit</label>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -156,12 +156,12 @@ export function CreateShipmentModal({
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="1000"
                   required
-                  className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-mono font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-mono font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
                 <select
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
-                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
+                  className="rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-sm text-neutral-900"
                 >
                   <option value="kg">kg</option>
                   <option value="crates">crates</option>
@@ -173,7 +173,7 @@ export function CreateShipmentModal({
 
           {/* Collector Selection */}
           <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Destination Collector Node
             </label>
             <div className="relative">
@@ -181,7 +181,7 @@ export function CreateShipmentModal({
                 value={collectorId}
                 onChange={(e) => setCollectorId(e.target.value)}
                 required
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-900 appearance-none focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 {collectors.length === 0 ? (
                   <option value="node-coll-001">Pune City Produce Collector (Pune)</option>
@@ -193,34 +193,34 @@ export function CreateShipmentModal({
                   ))
                 )}
               </select>
-              <Building2 className="absolute right-4 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Building2 className="absolute right-4 top-3 h-4 w-4 text-neutral-400 pointer-events-none" />
             </div>
           </div>
 
           {/* Origin & Destination */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">Dispatch Origin</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Dispatch Origin</label>
               <div className="relative">
                 <input
                   type="text"
                   value={origin}
                   onChange={(e) => setOrigin(e.target.value)}
                   required
-                  className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">Delivery Destination</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Delivery Destination</label>
               <div className="relative">
                 <input
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   required
-                  className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
@@ -229,24 +229,24 @@ export function CreateShipmentModal({
           {/* Settlement Value & Expected Arrival */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">Consignment Value (₹)</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Consignment Value (₹)</label>
               <input
                 type="number"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder="50000"
                 required
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-mono font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-mono font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">Expected Delivery ETA</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">Expected Delivery ETA</label>
               <input
                 type="text"
                 value={expectedArrival}
                 onChange={(e) => setExpectedArrival(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -256,14 +256,14 @@ export function CreateShipmentModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+              className="px-4 py-2 text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-brand-foreground shadow hover:opacity-95 disabled:opacity-50 transition-all"
+              className="flex items-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-50 transition-all cursor-pointer"
             >
               <Send className="h-4 w-4" />
               {submitting ? 'Dispatching Request...' : 'Send Shipment Request'}
