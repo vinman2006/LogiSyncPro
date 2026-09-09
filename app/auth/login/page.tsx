@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import gsap from 'gsap';
 import {
@@ -16,10 +16,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { getAuthErrorMessage } from '@/lib/firebase/auth';
+import { auth } from '@/lib/firebase/firebase';
 import { LogoIcon } from '@/components/ui/Logo';
 
 function LoginPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from') || '/dashboard';
   const { user, loading, signInWithGoogle, signInWithEmail } = useAuth();
@@ -42,12 +42,12 @@ function LoginPageContent() {
     return from;
   }, [from]);
 
-  // Redirect if already logged in
+  // Redirect as soon as user is authenticated
   useEffect(() => {
-    if (!loading && user) {
-      router.replace(getDestination());
+    if (user || auth?.currentUser) {
+      window.location.href = getDestination();
     }
-  }, [user, loading, router, getDestination]);
+  }, [user, getDestination]);
 
   // GSAP entrance animations
   useEffect(() => {
@@ -91,10 +91,25 @@ function LoginPageContent() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError('');
+
+    // Safety interval: if popup authenticates in background while window closes
+    const checkInterval = setInterval(() => {
+      if (auth?.currentUser) {
+        clearInterval(checkInterval);
+        window.location.href = getDestination();
+      }
+    }, 400);
+
     try {
       await signInWithGoogle();
-      router.replace(getDestination());
+      clearInterval(checkInterval);
+      window.location.href = getDestination();
     } catch (err: unknown) {
+      clearInterval(checkInterval);
+      if (auth?.currentUser) {
+        window.location.href = getDestination();
+        return;
+      }
       setError(getAuthErrorMessage(err));
     } finally {
       setIsGoogleLoading(false);
@@ -111,7 +126,7 @@ function LoginPageContent() {
     setError('');
     try {
       await signInWithEmail(email, password);
-      router.replace(getDestination());
+      window.location.href = getDestination();
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
       gsap.fromTo(

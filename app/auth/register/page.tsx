@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import gsap from 'gsap';
 import {
@@ -17,10 +16,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { getAuthErrorMessage } from '@/lib/firebase/auth';
+import { auth } from '@/lib/firebase/firebase';
 import { LogoIcon } from '@/components/ui/Logo';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { user, loading, signInWithGoogle, registerWithEmail } = useAuth();
 
   const [displayName, setDisplayName] = useState('');
@@ -34,16 +33,18 @@ export default function RegisterPage() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loading && user) router.replace('/dashboard');
-  }, [user, loading, router]);
+    if (user || auth?.currentUser) {
+      window.location.href = '/dashboard';
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!cardRef.current) return;
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
     tl.fromTo(cardRef.current, { y: 40, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.7 })
-      .fromTo('.auth-logo', { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, '-=0.4')
-      .fromTo('.auth-field', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.1 }, '-=0.3')
-      .fromTo('.auth-btn', { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, stagger: 0.08 }, '-=0.1');
+      .fromTo('.reg-logo', { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, '-=0.4')
+      .fromTo('.reg-field', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.08 }, '-=0.3')
+      .fromTo('.reg-btn', { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, stagger: 0.08 }, '-=0.1');
 
     gsap.to('.auth-orb-1', { x: 30, y: -20, duration: 6, ease: 'sine.inOut', repeat: -1, yoyo: true });
     gsap.to('.auth-orb-2', { x: -20, y: 30, duration: 8, ease: 'sine.inOut', repeat: -1, yoyo: true });
@@ -52,10 +53,24 @@ export default function RegisterPage() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError('');
+
+    const checkInterval = setInterval(() => {
+      if (auth?.currentUser) {
+        clearInterval(checkInterval);
+        window.location.href = '/dashboard';
+      }
+    }, 400);
+
     try {
       await signInWithGoogle();
-      router.replace('/dashboard');
+      clearInterval(checkInterval);
+      window.location.href = '/dashboard';
     } catch (err: unknown) {
+      clearInterval(checkInterval);
+      if (auth?.currentUser) {
+        window.location.href = '/dashboard';
+        return;
+      }
       setError(getAuthErrorMessage(err));
     } finally {
       setIsGoogleLoading(false);
@@ -76,7 +91,7 @@ export default function RegisterPage() {
     setError('');
     try {
       await registerWithEmail(email, password, displayName);
-      router.replace('/onboarding');
+      window.location.href = '/onboarding';
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
       gsap.fromTo(cardRef.current, { x: -8 }, { x: 0, duration: 0.4, ease: 'elastic.out(1, 0.3)' });

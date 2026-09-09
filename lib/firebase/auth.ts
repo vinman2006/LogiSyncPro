@@ -90,6 +90,9 @@ export function getAuthErrorMessage(err: unknown): string {
 export async function signInWithGoogle(): Promise<User> {
   const authInstance = requireAuth();
   const result = await signInWithPopup(authInstance, googleProvider);
+  if (result?.user && typeof document !== 'undefined') {
+    document.cookie = `firebase-auth-session=${result.user.uid}; path=/; max-age=2592000; SameSite=Lax`;
+  }
   return result.user;
 }
 
@@ -100,6 +103,9 @@ export async function signInWithEmail(
 ): Promise<User> {
   const authInstance = requireAuth();
   const result = await signInWithEmailAndPassword(authInstance, email, password);
+  if (result?.user && typeof document !== 'undefined') {
+    document.cookie = `firebase-auth-session=${result.user.uid}; path=/; max-age=2592000; SameSite=Lax`;
+  }
   return result.user;
 }
 
@@ -112,6 +118,9 @@ export async function registerWithEmail(
   const authInstance = requireAuth();
   const result = await createUserWithEmailAndPassword(authInstance, email, password);
   await updateProfile(result.user, { displayName });
+  if (result?.user && typeof document !== 'undefined') {
+    document.cookie = `firebase-auth-session=${result.user.uid}; path=/; max-age=2592000; SameSite=Lax`;
+  }
   return result.user;
 }
 

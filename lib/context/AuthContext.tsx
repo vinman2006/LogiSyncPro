@@ -118,7 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         const initialName = resolveUserName(firebaseUser.displayName, firebaseUser.email);
         setUserName(initialName);
-        await syncWithNeon(firebaseUser);
+        setLoading(false);
+        // Non-blocking sync with Neon in background
+        syncWithNeon(firebaseUser).catch((err) =>
+          console.warn('[Auth] Non-blocking Neon sync error:', err)
+        );
       } else {
         if (typeof document !== 'undefined') {
           document.cookie = 'firebase-auth-session=; path=/; max-age=0; SameSite=Lax';
@@ -127,8 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserProfile(null);
         setUserNode(null);
         setHasCompletedOnboarding(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
     return () => unsubscribe();
   }, [syncWithNeon]);
